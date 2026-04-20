@@ -1,0 +1,85 @@
+export type ProcurementCategory =
+  | "All"
+  | "Tenders"
+  | "RFQ"
+  | "Prequalification"
+  | "Framework"
+  | "Auction";
+
+export type Tender = {
+  id: string;
+  title: string;
+  organization: string;
+  category: Exclude<ProcurementCategory, "All">;
+  dateLabel: string;
+  location: string;
+};
+
+export type TenderRequirementRow = {
+  item: string;
+  description: string;
+  unit: string;
+  quantity: string;
+};
+
+export type TenderDocument = {
+  name: string;
+  href: string;
+  /** Suggested filename when saving (HTML download attribute) */
+  downloadAs?: string;
+};
+
+export type PartyContact = {
+  email: string;
+  phoneDisplay: string;
+  phoneTel: string;
+  whatsappDigits: string;
+};
+
+export type TenderDetailRow = { label: string; value: string };
+
+export type TenderDetail = Tender & {
+  description: string;
+  organizationBlurb: string;
+  expiryLabel: string;
+  detailRows: TenderDetailRow[];
+  requirements: TenderRequirementRow[];
+  documents: TenderDocument[];
+  contact: PartyContact;
+};
+
+export type MarketplaceItem = {
+  id: string;
+  title: string;
+  category: string;
+  price: string;
+  imageUrl: string;
+};
+
+export type MarketplaceDetail = MarketplaceItem & {
+  description: string;
+  seller: string;
+  highlights: string[];
+  contact: PartyContact;
+};
+
+export type BlogPost = {
+  id: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  author: string;
+  date: string;
+};
+
+export type BlogDetail = BlogPost & {
+  paragraphs: string[];
+};
+
+export type TendersQuery = {
+  q?: string;
+  location?: string;
+  category?: string;
+  sort?: "newest" | "oldest";
+  dateWindow?: "any" | "24h" | "3d" | "7d" | "30d";
+};
