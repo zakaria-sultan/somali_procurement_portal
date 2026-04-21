@@ -17,7 +17,6 @@ import {
 import { putAdminBlob } from "@/lib/blob-upload";
 import prisma from "@/lib/prisma";
 import { revalidatePublicSite } from "@/lib/revalidate-public-site";
-import { sanitizeTenderHtml } from "@/lib/sanitize-tender-html";
 import type { TenderDocument } from "@/lib/types";
 
 export type AdminActionState = { ok: boolean; message: string };
@@ -155,6 +154,7 @@ export async function createTender(
     return { ok: false, message: logoResult.error };
   }
 
+  const { sanitizeTenderHtml } = await import("@/lib/sanitize-tender-html");
   const requirementsHtml = sanitizeTenderHtml(parsed.data.requirementsHtml);
   const howToApply = sanitizeTenderHtml(parsed.data.howToApply);
   const contact = tenderContactFromForm(parsed.data);
@@ -248,6 +248,7 @@ export async function updateTender(
     return { ok: false, message: logoResult.error };
   }
 
+  const { sanitizeTenderHtml } = await import("@/lib/sanitize-tender-html");
   const requirementsHtml = sanitizeTenderHtml(parsed.data.requirementsHtml);
   const howToApply = sanitizeTenderHtml(parsed.data.howToApply);
   const contact = tenderContactFromForm(parsed.data);
