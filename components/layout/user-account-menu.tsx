@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { isContentAdmin } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 function initials(name: string | null | undefined, email: string | null | undefined) {
@@ -111,7 +112,7 @@ export function UserAccountMenu({ className }: { className?: string }) {
             <UserRound className="size-4" />
             Profile
           </DropdownMenuItem>
-          {user.role === "ADMIN" ? (
+          {isContentAdmin(user.role) ? (
             <DropdownMenuItem onClick={() => router.push("/admin")}>
               <Shield className="size-4" />
               Admin dashboard

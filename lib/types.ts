@@ -43,6 +43,10 @@ export type TenderDetail = Tender & {
   organizationBlurb: string;
   expiryLabel: string;
   requirements: TenderRequirementRow[];
+  /** Rich-text requirements (sanitized HTML). When set, preferred over `requirements` rows. */
+  requirementsHtml: string;
+  /** Application instructions (sanitized HTML). */
+  howToApply: string;
   documents: TenderDocument[];
   contact: PartyContact;
 };
@@ -69,6 +73,8 @@ export type BlogPost = {
   category: string;
   author: string;
   date: string;
+  /** Cover image (Blob URL or `/api/blob/...` when private). */
+  imageUrl?: string | null;
 };
 
 export type BlogDetail = BlogPost & {

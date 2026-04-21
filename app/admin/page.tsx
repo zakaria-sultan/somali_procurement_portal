@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, FileText, Newspaper, Store } from "lucide-react";
+import { ArrowRight, FileText, Newspaper, Store, Users } from "lucide-react";
 
+import { getUserStatsForAdminDashboard } from "@/app/actions/admin-dashboard-stats";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { buttonVariants } from "@/components/ui/button";
+import { isUserManager } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -13,13 +16,16 @@ import {
 } from "@/components/ui/card";
 
 export default async function AdminHomePage() {
-  const [tenders, listings, blogs] = await Promise.all([
+  const [tenders, listings, blogs, userStats, session] = await Promise.all([
     prisma.tender.count(),
     prisma.marketplaceListing.count(),
     prisma.blog.count(),
+    getUserStatsForAdminDashboard(),
+    auth(),
   ]);
 
   const total = tenders + listings + blogs;
+  const canManageUsers = isUserManager(session?.user?.role);
 
   return (
     <div className="space-y-10">
@@ -52,6 +58,130 @@ export default async function AdminHomePage() {
             </span>
           </div>
         </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="border-sky-500/20 shadow-sm">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-sky-500/15 text-sky-700 dark:text-sky-300">
+                <Users className="size-4" aria-hidden />
+              </div>
+              <CardTitle className="text-base">Registered users</CardTitle>
+            </div>
+            <CardDescription>
+              Accounts with an email (Google or credentials).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+              <p className="text-2xl font-bold tabular-nums text-foreground">
+                {userStats.totalWithEmail}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">Total</p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+              <p className="text-2xl font-bold tabular-nums text-violet-700 dark:text-violet-300">
+                {userStats.superAdmins}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Super admins
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+              <p className="text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                {userStats.admins}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Admins
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+              <p className="text-2xl font-bold tabular-nums text-foreground">
+                {userStats.users}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">Members</p>
+            </div>
+          </CardContent>
+          {canManageUsers ? (
+            <CardContent className="border-t border-border pt-4">
+              <p className="text-sm text-muted-foreground">
+                You have the <strong className="text-foreground">Super admin</strong>{" "}
+                role — open Users to change roles or remove accounts (keep at least
+                one super admin).
+              </p>
+              <Link
+                href="/admin/users"
+                className={cn(
+                  buttonVariants(),
+                  "mt-3 inline-flex rounded-xl gap-2"
+                )}
+              >
+                Open user management
+                <ArrowRight className="size-4" />
+              </Link>
+            </CardContent>
+          ) : null}
+        </Card>
+
+        <Card className="border-amber-500/20 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Sign-in activity</CardTitle>
+            <CardDescription>
+              JWT sessions do not report “online now.” We record{" "}
+              <strong className="font-medium text-foreground">last sign-in</strong>{" "}
+              on each login and show recent activity below.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+              <p className="text-2xl font-bold tabular-nums text-foreground">
+                {userStats.signedInLast24h}
+              </p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Signed in within the last 24 hours
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-card">
+              <p className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Recent sign-ins
+              </p>
+              <ul className="max-h-48 divide-y divide-border overflow-y-auto text-xs">
+                {userStats.recentLogins.length === 0 ? (
+                  <li className="px-3 py-3 text-muted-foreground">
+                    No sign-ins recorded yet.
+                  </li>
+                ) : (
+                  userStats.recentLogins.map((u, i) => (
+                    <li
+                      key={`${u.email ?? "u"}-${i}`}
+                      className="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
+                    >
+                      <span className="min-w-0 truncate font-medium text-foreground">
+                        {u.email}
+                        {u.role === "SUPER_ADMIN" ? (
+                          <span className="ml-1 text-[0.65rem] text-violet-600 dark:text-violet-300">
+                            (super)
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="shrink-0 tabular-nums text-muted-foreground">
+                        {u.lastLoginAt
+                          ? u.lastLoginAt.toLocaleString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : ""}
+                      </span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="space-y-3">

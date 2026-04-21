@@ -13,18 +13,25 @@ export function MarketplaceGridCard({
   className?: string;
 }) {
   const href = `/marketplace/${item.id}`;
+  const imageSrc = item.imageUrl?.trim() ?? "";
 
   return (
     <Card className={cn("overflow-hidden p-0 pb-4 ring-0", className)}>
       <Link href={href} className="block">
-        <div className="relative aspect-[4/3] w-full bg-muted">
-          <Image
-            src={item.imageUrl}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
-          />
+        <div className="relative aspect-[4/3] w-full bg-gradient-to-br from-muted to-muted/40">
+          {imageSrc ? (
+            <Image
+              src={imageSrc}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
+              No image
+            </div>
+          )}
         </div>
       </Link>
       <div className="px-4 pt-3">

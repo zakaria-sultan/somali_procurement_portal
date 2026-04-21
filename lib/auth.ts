@@ -4,7 +4,8 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
-import { ADMIN_EMAIL } from "@/lib/auth-constants";
+import type { AppRole } from "@/lib/roles";
+import { ensureSuperAdminBootstrapped } from "@/lib/super-admin-bootstrap";
 import prisma from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -45,11 +46,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-      /**
-       * Lets a verified Google email attach to an existing user when IDs differ
-       * (avoids OAuthAccountNotLinked in edge cases). Safer when Google is the
-       * only auth provider.
-       */
       allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
@@ -58,63 +54,46 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  /**
-   * Do not run DB writes in `callbacks.signIn` — it runs *before* the adapter
-   * creates the User on first OAuth login, so `user.update` throws → AccessDenied.
-   * `events.signIn` runs after the account is linked and the row exists.
-   */
   events: {
-    /** Ensure the configured super-admin is always ADMIN; other roles come from the database. */
     async signIn({ user }) {
-      if (!user?.id || !user.email) return;
-      if (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { role: "ADMIN" },
-        });
-      }
+      if (!user?.id) return;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
+      await ensureSuperAdminBootstrapped();
     },
   },
   callbacks: {
-    /**
-     * IMPORTANT: Middleware runs on the Edge runtime. Do not call Prisma here when
-     * `user` is absent (normal session refresh) — Prisma is Node-only and will
-     * throw, Auth.js will clear the session cookie, and the user looks signed out.
-     * Only load from the DB on explicit sign-in when `user` is present (Node route).
-     */
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user }) {
       if (user?.id) {
         const id = String(user.id);
-        const email = user.email?.toLowerCase() ?? "";
-        let role: "ADMIN" | "USER" =
-          email === ADMIN_EMAIL.toLowerCase() ? "ADMIN" : "USER";
-        if (role === "USER") {
-          const dbUser = await prisma.user.findUnique({
-            where: { id },
-            select: { role: true },
-          });
-          if (dbUser) role = dbUser.role as "ADMIN" | "USER";
-        }
+        await ensureSuperAdminBootstrapped();
+        const dbUser = await prisma.user.findUnique({
+          where: { id },
+          select: { role: true },
+        });
+        const role = (dbUser?.role ?? "USER") as AppRole;
         token.id = id;
         token.sub = id;
         token.role = role;
         return token;
       }
 
-      if (trigger === "update" && token.sub) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: String(token.sub) },
-          select: { role: true },
-        });
-        if (dbUser) token.role = dbUser.role as "ADMIN" | "USER";
-        return token;
-      }
-
-      if (
-        typeof token.email === "string" &&
-        token.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
-      ) {
-        token.role = "ADMIN";
+      if (token.sub) {
+        try {
+          await ensureSuperAdminBootstrapped();
+          const dbUser = await prisma.user.findUnique({
+            where: { id: String(token.sub) },
+            select: { role: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role as AppRole;
+          }
+          token.id = String(token.sub);
+        } catch {
+          /* keep existing token */
+        }
       }
 
       return token;
@@ -122,7 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = (token.id as string) ?? token.sub ?? "";
-        session.user.role = (token.role as "ADMIN" | "USER") ?? "USER";
+        session.user.role = (token.role as AppRole) ?? "USER";
       }
       return session;
     },

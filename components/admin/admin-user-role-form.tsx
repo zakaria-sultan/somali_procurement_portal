@@ -61,8 +61,9 @@ export function AdminUserRoleForm() {
             defaultValue="ADMIN"
             className={selectClass}
           >
-            <option value="ADMIN">Admin</option>
-            <option value="USER">User</option>
+            <option value="USER">User (member)</option>
+            <option value="ADMIN">Admin (content)</option>
+            <option value="SUPER_ADMIN">Super admin (content + users)</option>
           </select>
         </div>
       </div>

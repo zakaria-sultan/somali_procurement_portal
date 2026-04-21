@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useActionState } from "react";
 
 import {
@@ -82,6 +83,22 @@ function BlogFields({
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="image">Cover image (optional, Vercel Blob)</Label>
+          {post?.imageUrl?.trim() ? (
+            <div className="relative mb-2 max-h-56 w-full max-w-lg overflow-hidden rounded-xl border border-border bg-muted">
+              <div className="relative aspect-video w-full">
+                <Image
+                  src={post.imageUrl.trim()}
+                  alt=""
+                  fill
+                  className="object-contain"
+                  sizes="(max-width:896px) 100vw, 512px"
+                />
+              </div>
+              <p className="border-t border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+                Current cover — choose a new file below to replace it.
+              </p>
+            </div>
+          ) : null}
           <Input id="image" name="image" type="file" accept="image/*" />
         </div>
       </div>

@@ -3,20 +3,22 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { ADMIN_EMAIL } from "@/lib/auth-constants";
+import { isContentAdmin, isUserManager } from "@/lib/roles";
+import { ensureSuperAdminBootstrapped } from "@/lib/super-admin-bootstrap";
 
 export async function assertAdmin() {
+  await ensureSuperAdminBootstrapped();
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isContentAdmin(session.user.role)) {
     redirect("/");
   }
   return session;
 }
 
-/** Only the configured super-admin email may manage other admins. */
+/** User management: requires `SUPER_ADMIN` (multiple accounts may have this role). */
 export async function assertSuperAdmin() {
   const session = await assertAdmin();
-  if (session.user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+  if (!isUserManager(session.user.role)) {
     redirect("/admin");
   }
   return session;

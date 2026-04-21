@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { mainNav } from "@/lib/nav";
+import { isContentAdmin } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 function NavLink({
@@ -98,7 +99,7 @@ export function SiteHeader() {
                     </button>
                   </>
                 ) : null}
-                {session?.user?.role === "ADMIN" ? (
+                {isContentAdmin(session?.user?.role) ? (
                   <Link
                     href="/admin"
                     className="rounded-lg px-3 py-2.5 text-sm font-semibold text-brand-cyan hover:bg-muted"
@@ -122,7 +123,7 @@ export function SiteHeader() {
 
         <div className="ml-4 flex flex-1 items-center justify-end gap-3 sm:ml-6 sm:gap-4">
           <ThemeToggle />
-          {session?.user?.role === "ADMIN" ? (
+          {isContentAdmin(session?.user?.role) ? (
             <Link
               href="/admin"
               className="hidden text-sm font-semibold text-brand-cyan hover:underline sm:inline"

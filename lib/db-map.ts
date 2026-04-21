@@ -69,6 +69,8 @@ export function mapTenderDetail(row: PrismaTender): TenderDetail {
     organizationBlurb: row.organizationBlurb,
     expiryLabel: formatExpiryLabel(row.expiryDate),
     requirements: asRequirements(row.requirements),
+    requirementsHtml: row.requirementsHtml ?? "",
+    howToApply: row.howToApply ?? "",
     documents: asDocs(row.documents),
     contact: asPartyContact(row.contact),
   };
@@ -115,6 +117,7 @@ export function mapBlogList(row: Blog): BlogPost {
       day: "numeric",
       year: "numeric",
     }),
+    imageUrl: row.imageUrl ?? null,
   };
 }
 

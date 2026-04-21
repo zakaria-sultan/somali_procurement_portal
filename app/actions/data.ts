@@ -51,7 +51,7 @@ export async function getTenders(query: TendersQuery = {}): Promise<Tender[]> {
             ],
           }
         : {},
-      loc ? { location: { contains: loc, mode: "insensitive" as const } } : {},
+      loc ? { location: loc } : {},
       category && category !== "All" ? { category } : {},
       postedDateFilter(dateWindow),
     ],
@@ -63,6 +63,29 @@ export async function getTenders(query: TendersQuery = {}): Promise<Tender[]> {
   });
 
   return rows.map(mapTenderList);
+}
+
+/** Distinct locations and categories from tenders (for filter `<select>` options). */
+export async function getTenderFilterOptions(): Promise<{
+  locations: string[];
+  categories: string[];
+}> {
+  const [locRows, catRows] = await Promise.all([
+    prisma.tender.findMany({
+      select: { location: true },
+      distinct: ["location"],
+      orderBy: { location: "asc" },
+    }),
+    prisma.tender.findMany({
+      select: { category: true },
+      distinct: ["category"],
+      orderBy: { category: "asc" },
+    }),
+  ]);
+  return {
+    locations: locRows.map((r) => r.location).filter(Boolean),
+    categories: catRows.map((r) => r.category).filter(Boolean),
+  };
 }
 
 export async function getFeaturedTenders(limit = 4): Promise<Tender[]> {
@@ -83,15 +106,43 @@ export async function getMarketplaceHighlights(
   return rows.map(mapMarketplaceList);
 }
 
-export async function getMarketplaceItems(): Promise<MarketplaceItem[]> {
+export async function getMarketplaceItems(query?: {
+  q?: string;
+}): Promise<MarketplaceItem[]> {
+  const q = query?.q?.trim() ?? "";
+  const where = q
+    ? {
+        OR: [
+          { title: { contains: q, mode: "insensitive" as const } },
+          { description: { contains: q, mode: "insensitive" as const } },
+          { seller: { contains: q, mode: "insensitive" as const } },
+          { category: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+
   const rows = await prisma.marketplaceListing.findMany({
+    where,
     orderBy: { createdAt: "desc" },
   });
   return rows.map(mapMarketplaceList);
 }
 
-export async function getBlogPosts(): Promise<BlogPost[]> {
+export async function getBlogPosts(query?: { q?: string }): Promise<BlogPost[]> {
+  const q = query?.q?.trim() ?? "";
+  const where = q
+    ? {
+        OR: [
+          { title: { contains: q, mode: "insensitive" as const } },
+          { content: { contains: q, mode: "insensitive" as const } },
+          { author: { contains: q, mode: "insensitive" as const } },
+          { category: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+
   const rows = await prisma.blog.findMany({
+    where,
     orderBy: { createdAt: "desc" },
   });
   return rows.map(mapBlogList);

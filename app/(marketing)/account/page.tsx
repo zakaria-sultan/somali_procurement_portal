@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { isContentAdmin, roleDisplayLabel } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 
@@ -60,7 +61,7 @@ export default async function AccountPage() {
                 Role
               </dt>
               <dd className="mt-1 text-sm font-medium text-foreground">
-                {u.role === "ADMIN" ? "Administrator" : "Member"}
+                {roleDisplayLabel(u.role)}
               </dd>
             </div>
           </dl>
@@ -68,7 +69,7 @@ export default async function AccountPage() {
             <Link href="/" className={cn(buttonVariants(), "rounded-full")}>
               Back to home
             </Link>
-            {u.role === "ADMIN" ? (
+            {isContentAdmin(u.role) ? (
               <Link
                 href="/admin"
                 className={cn(

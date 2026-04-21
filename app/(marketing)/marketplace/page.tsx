@@ -1,16 +1,28 @@
+import { Suspense } from "react";
+
 import { getMarketplaceItems } from "@/app/actions/data";
 import { MarketplaceGridCard } from "@/components/marketing/marketplace-grid-card";
-import { Input } from "@/components/ui/input";
+import { LiveQuerySearch } from "@/components/marketing/live-query-search";
+import { firstParam } from "@/lib/search-params";
 import type { Metadata } from "next";
-import { Search } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Marketplace",
   description: "Products and services from verified Somali sellers.",
 };
 
-export default async function MarketplacePage() {
-  const items = await getMarketplaceItems();
+type MarketplaceSearchParams = Promise<
+  Record<string, string | string[] | undefined>
+>;
+
+export default async function MarketplacePage({
+  searchParams,
+}: {
+  searchParams: MarketplaceSearchParams;
+}) {
+  const sp = await searchParams;
+  const q = firstParam(sp.q);
+  const items = await getMarketplaceItems({ q });
 
   return (
     <div className="bg-muted/30">
@@ -24,18 +36,19 @@ export default async function MarketplacePage() {
             services. Transactions will be secured through verified accounts in a
             future release.
           </p>
-          <form
-            className="mt-6 flex max-w-xl items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2"
-            action="/marketplace"
-            method="get"
+          <Suspense
+            fallback={
+              <div className="mt-6 h-10 max-w-xl animate-pulse rounded-xl bg-muted/60" />
+            }
           >
-            <Search className="size-4 shrink-0 text-muted-foreground" />
-            <Input
-              name="q"
+            <LiveQuerySearch
+              pathname="/marketplace"
               placeholder="Search the marketplace…"
-              className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0"
+              defaultValue={q ?? ""}
+              className="mt-6 flex max-w-xl items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2"
+              inputClassName="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0"
             />
-          </form>
+          </Suspense>
         </div>
       </div>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">

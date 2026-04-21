@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -27,6 +28,7 @@ export default async function BlogDetailPage({ params }: Props) {
 
   const related = await getRelatedBlogs(post.id, post.category, 3);
   const path = `/blogs/${post.id}`;
+  const coverSrc = post.imageUrl?.trim() ?? "";
 
   return (
     <div className="bg-background print:bg-white">
@@ -41,6 +43,18 @@ export default async function BlogDetailPage({ params }: Props) {
         </div>
 
         <header className="space-y-4 border-b border-border pb-8">
+          {coverSrc ? (
+            <div className="relative -mx-4 mb-6 aspect-[16/9] overflow-hidden rounded-2xl bg-muted sm:mx-0 print:hidden">
+              <Image
+                src={coverSrc}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width:768px) 100vw, 48rem"
+                priority
+              />
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
             <span>{post.author}</span>
             <span aria-hidden>|</span>

@@ -8,7 +8,10 @@ import type {
   TenderDetail,
 } from "@/lib/types";
 
-type TenderExtra = Omit<TenderDetail, keyof Tender>;
+type TenderExtra = Omit<TenderDetail, keyof Tender | "requirementsHtml" | "howToApply"> & {
+  requirementsHtml?: string;
+  howToApply?: string;
+};
 
 function sitePhones(): Pick<
   PartyContact,
@@ -144,6 +147,8 @@ function defaultTenderExtra(base: Tender): TenderExtra {
         downloadAs: "draft-contract.pdf",
       },
     ],
+    requirementsHtml: "",
+    howToApply: "",
   };
 }
 
@@ -151,7 +156,12 @@ export function buildTenderDetail(id: string): TenderDetail | null {
   const base = mockTenders.find((t) => t.id === id);
   if (!base) return null;
   const extra = tenderExtras[id] ?? defaultTenderExtra(base);
-  return { ...base, ...extra };
+  return {
+    ...base,
+    ...extra,
+    requirementsHtml: extra.requirementsHtml ?? "",
+    howToApply: extra.howToApply ?? "",
+  };
 }
 
 type MarketplaceExtra = Pick<

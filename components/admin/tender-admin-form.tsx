@@ -8,11 +8,12 @@ import {
   type AdminActionState,
 } from "@/app/actions/admin-mutations";
 import { FormAuthAlert } from "@/components/auth/form-auth-alert";
+import { TenderRichTextEditor } from "@/components/admin/tender-rich-text-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { requirementsToPlainText } from "@/lib/schemas/admin";
+import { legacyRequirementsToHtml } from "@/lib/legacy-requirements-html";
 import type { TenderDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -84,9 +85,14 @@ function TenderFields({
     expiresAt ?? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   const c = tender?.contact ?? DEFAULT_CONTACT;
-  const reqText = tender
-    ? requirementsToPlainText(tender.requirements)
+  const requirementsDefaultHtml = tender
+    ? tender.requirementsHtml?.trim() ||
+      (tender.requirements.length > 0
+        ? legacyRequirementsToHtml(tender.requirements)
+        : "")
     : "";
+  const howToApplyDefault = tender?.howToApply ?? "";
+  const editorKey = tender ? tender.id : "new";
 
   return (
     <form action={action} className="space-y-6">
@@ -240,14 +246,14 @@ function TenderFields({
           Documents
         </h2>
         <p className="mb-4 text-xs text-muted-foreground">
-          PDF or Word (.doc, .docx). You can select multiple files. At least one
-          document is required.
+          Upload <strong>.zip</strong> archives only (one or more files per tender
+          package). Max 40 MB per file. At least one document is required.
         </p>
         <Input
           id="documents"
           name="documents"
           type="file"
-          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          accept=".zip,application/zip,application/x-zip-compressed"
           multiple
           className="rounded-xl"
           required={!tender || (tender.documents?.length ?? 0) === 0}
@@ -280,14 +286,32 @@ function TenderFields({
           Requirements
         </h2>
         <p className="mb-4 text-xs text-muted-foreground">
-          Write everything in one place — lists, paragraphs, or bullet points.
+          Use the toolbar for bold, headings, bullets, and numbered lists. This
+          replaces the old table view on the public tender page.
         </p>
-        <Textarea
-          id="requirementsText"
-          name="requirementsText"
-          className="min-h-[160px] rounded-xl"
-          placeholder="Describe scope, deliverables, eligibility, deadlines for bidders…"
-          defaultValue={reqText}
+        <TenderRichTextEditor
+          key={`${editorKey}-requirements`}
+          name="requirementsHtml"
+          defaultHtml={requirementsDefaultHtml}
+          placeholder="Scope, eligibility, deliverables, evaluation criteria…"
+          minHeightClassName="min-h-[200px]"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-border/80 bg-card/50 p-5 shadow-sm">
+        <h2 className="mb-1 font-heading text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          How to apply
+        </h2>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Steps for bidders (deadlines, where to submit, required forms) — shown
+          prominently on the public tender page.
+        </p>
+        <TenderRichTextEditor
+          key={`${editorKey}-howto`}
+          name="howToApplyHtml"
+          defaultHtml={howToApplyDefault}
+          placeholder="1. Register on… 2. Submit sealed bids to… 3. Deadline…"
+          minHeightClassName="min-h-[140px]"
         />
       </div>
 

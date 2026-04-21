@@ -1,16 +1,28 @@
+import { Suspense } from "react";
+
 import { getBlogPosts } from "@/app/actions/data";
 import { BlogGridCard } from "@/components/marketing/blog-grid-card";
-import { Input } from "@/components/ui/input";
+import { LiveQuerySearch } from "@/components/marketing/live-query-search";
+import { firstParam } from "@/lib/search-params";
 import type { Metadata } from "next";
-import { Search } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Blogs",
   description: "Procurement policy, supplier tips, and regional market news.",
 };
 
-export default async function BlogsPage() {
-  const posts = await getBlogPosts();
+type BlogsSearchParams = Promise<
+  Record<string, string | string[] | undefined>
+>;
+
+export default async function BlogsPage({
+  searchParams,
+}: {
+  searchParams: BlogsSearchParams;
+}) {
+  const sp = await searchParams;
+  const q = firstParam(sp.q);
+  const posts = await getBlogPosts({ q });
 
   return (
     <div className="bg-background">
@@ -26,18 +38,19 @@ export default async function BlogsPage() {
                 Africa.
               </p>
             </div>
-            <form
-              className="flex w-full max-w-md items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2 lg:w-auto lg:min-w-[320px]"
-              action="/blogs"
-              method="get"
+            <Suspense
+              fallback={
+                <div className="flex h-10 w-full max-w-md animate-pulse rounded-xl bg-muted/60 lg:min-w-[320px]" />
+              }
             >
-              <Search className="size-4 shrink-0 text-muted-foreground" />
-              <Input
-                name="q"
+              <LiveQuerySearch
+                pathname="/blogs"
                 placeholder="Search articles…"
-                className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0"
+                defaultValue={q ?? ""}
+                className="flex w-full max-w-md items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2 lg:w-auto lg:min-w-[320px]"
+                inputClassName="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0"
               />
-            </form>
+            </Suspense>
           </div>
         </div>
       </div>

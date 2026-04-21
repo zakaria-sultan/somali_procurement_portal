@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
@@ -15,10 +16,30 @@ export function BlogGridCard({
 }) {
   const href = `/blogs/${post.id}`;
 
+  const imageSrc = post.imageUrl?.trim() ?? "";
+  const hasImage = imageSrc.length > 0;
+
   return (
     <Card className={cn("gap-0 overflow-hidden p-0 ring-0", className)}>
       <Link href={href} className="block">
-        <div className="aspect-[16/10] w-full bg-gradient-to-br from-brand-navy/90 via-brand-navy/70 to-brand-cyan/50" />
+        <div
+          className={cn(
+            "relative aspect-[16/10] w-full",
+            hasImage
+              ? "bg-muted"
+              : "bg-gradient-to-br from-brand-navy/90 via-brand-navy/70 to-brand-cyan/50"
+          )}
+        >
+          {hasImage ? (
+            <Image
+              src={imageSrc}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
+            />
+          ) : null}
+        </div>
       </Link>
       <div className="space-y-3 p-4">
         <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">

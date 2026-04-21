@@ -12,8 +12,15 @@ import { TenderDocumentList } from "@/components/detail/tender-document-list";
 import { TenderMetaSidebar } from "@/components/detail/tender-meta-sidebar";
 import { TenderGridCard } from "@/components/marketing/tender-grid-card";
 import { tenderCategoryBadgeClassName } from "@/lib/tender-category-badge";
+import {
+  sanitizeTenderHtml,
+  tenderHtmlIsMeaningful,
+} from "@/lib/sanitize-tender-html";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
+
+const tenderProseClass =
+  "tender-prose mt-3 text-sm leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_h2]:mt-4 [&_h2]:font-heading [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:mt-3 [&_h3]:font-heading [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_li]:my-0.5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-6";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -41,6 +48,13 @@ export default async function TenderDetailPage({ params }: Props) {
     .map((w) => w[0])
     .join("");
   const logoUrl = tender.organizationLogoUrl;
+
+  const requirementsHtmlSafe = sanitizeTenderHtml(tender.requirementsHtml ?? "");
+  const showRequirementsRich = tenderHtmlIsMeaningful(tender.requirementsHtml ?? "");
+  const showRequirementsLegacy =
+    !showRequirementsRich && tender.requirements.length > 0;
+  const howToHtmlSafe = sanitizeTenderHtml(tender.howToApply ?? "");
+  const showHowTo = tenderHtmlIsMeaningful(tender.howToApply ?? "");
 
   return (
     <div className="bg-background print:bg-white">
@@ -102,19 +116,51 @@ export default async function TenderDetailPage({ params }: Props) {
               </p>
             </section>
 
-            {tender.requirements.length > 0 ? (
+            {showHowTo ? (
+              <section
+                className="rounded-2xl border-2 border-sky-500/25 bg-gradient-to-br from-sky-50/90 to-card p-6 dark:from-brand-navy/40 dark:to-card print:border print:border-border print:bg-card"
+                aria-labelledby="how-to-apply-heading"
+              >
+                <h2
+                  id="how-to-apply-heading"
+                  className="font-heading text-lg font-semibold text-brand-navy dark:text-foreground"
+                >
+                  How to apply
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Follow these steps to submit a compliant bid or expression of interest.
+                </p>
+                <div
+                  className={tenderProseClass}
+                  dangerouslySetInnerHTML={{ __html: howToHtmlSafe }}
+                />
+              </section>
+            ) : null}
+
+            {showRequirementsRich ? (
+              <section>
+                <h2 className="font-heading text-lg font-semibold text-foreground">
+                  Requirements
+                </h2>
+                <div
+                  className={tenderProseClass}
+                  dangerouslySetInnerHTML={{ __html: requirementsHtmlSafe }}
+                />
+              </section>
+            ) : null}
+
+            {showRequirementsLegacy ? (
               <section>
                 <h2 className="font-heading text-lg font-semibold text-foreground">
                   Requirements
                 </h2>
                 <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-                  <table className="w-full min-w-[600px] text-sm">
+                  <table className="w-full min-w-[480px] text-sm">
                     <thead>
                       <tr className="bg-muted/70 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         <th className="px-4 py-3">#</th>
                         <th className="px-4 py-3">Description</th>
                         <th className="px-4 py-3">Unit</th>
-                        <th className="px-4 py-3">Qty</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border bg-card">
@@ -126,9 +172,6 @@ export default async function TenderDetailPage({ params }: Props) {
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">
                             {r.unit}
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground">
-                            {r.quantity}
                           </td>
                         </tr>
                       ))}

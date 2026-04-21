@@ -11,30 +11,32 @@ import {
   highlightsFromFormData,
   marketplaceContactFromForm,
   marketplaceFormSchema,
-  requirementsFromPlainText,
   tenderContactFromForm,
   tenderFormSchema,
   tenderIdSchema,
 } from "@/lib/schemas/admin";
+import { sanitizeTenderHtml } from "@/lib/sanitize-tender-html";
 import { putAdminBlob } from "@/lib/blob-upload";
 import prisma from "@/lib/prisma";
 import type { TenderDocument } from "@/lib/types";
 
 export type AdminActionState = { ok: boolean; message: string };
 
-const DOC_MIME = new Set([
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+const ZIP_MIME = new Set([
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/x-zip",
 ]);
 
 function isAllowedDocFile(file: File): boolean {
-  if (DOC_MIME.has(file.type)) return true;
+  if (ZIP_MIME.has(file.type)) return true;
   if (!file.type || file.type === "application/octet-stream") {
-    return /\.(pdf|doc|docx)$/i.test(file.name);
+    return /\.zip$/i.test(file.name);
   }
   return false;
 }
+
+const DOC_MAX_BYTES = 40 * 1024 * 1024;
 
 async function tenderDocumentsFromForm(
   formData: FormData,
@@ -52,11 +54,11 @@ async function tenderDocumentsFromForm(
     if (!(entry instanceof File) || entry.size === 0) continue;
     if (!isAllowedDocFile(entry)) {
       return {
-        error: `${entry.name}: use PDF or Word (.doc, .docx) only.`,
+        error: `${entry.name}: upload .zip archives only.`,
       };
     }
-    if (entry.size > 10 * 1024 * 1024) {
-      return { error: `${entry.name} is too large (max 10 MB).` };
+    if (entry.size > DOC_MAX_BYTES) {
+      return { error: `${entry.name} is too large (max 40 MB).` };
     }
     try {
       const href = await putAdminBlob(entry);
@@ -73,7 +75,7 @@ async function tenderDocumentsFromForm(
   }
   if (list.length === 0) {
     return {
-      error: "Add at least one tender document (PDF or Word).",
+      error: "Add at least one tender document (.zip).",
     };
   }
   return list;
@@ -135,7 +137,8 @@ export async function createTender(
     organizationBlurb: formData.get("organizationBlurb") ?? "",
     postedDate: formData.get("postedDate"),
     expiryDate: formData.get("expiryDate"),
-    requirementsText: formData.get("requirementsText") ?? "",
+    requirementsHtml: formData.get("requirementsHtml") ?? "",
+    howToApply: formData.get("howToApplyHtml") ?? "",
     contactEmail: formData.get("contactEmail"),
     contactPhoneDisplay: formData.get("contactPhoneDisplay"),
     contactPhoneTel: formData.get("contactPhoneTel"),
@@ -159,7 +162,8 @@ export async function createTender(
     return { ok: false, message: logoResult.error };
   }
 
-  const requirements = requirementsFromPlainText(parsed.data.requirementsText);
+  const requirementsHtml = sanitizeTenderHtml(parsed.data.requirementsHtml);
+  const howToApply = sanitizeTenderHtml(parsed.data.howToApply);
   const contact = tenderContactFromForm(parsed.data);
 
   try {
@@ -176,7 +180,9 @@ export async function createTender(
         organizationLogoUrl: logoResult,
         documents: documents as unknown as Prisma.InputJsonValue,
         detailRows: [] as unknown as Prisma.InputJsonValue,
-        requirements: requirements as unknown as Prisma.InputJsonValue,
+        requirements: [] as unknown as Prisma.InputJsonValue,
+        requirementsHtml,
+        howToApply,
         contact: contact as unknown as Prisma.InputJsonValue,
       },
     });
@@ -218,7 +224,8 @@ export async function updateTender(
     organizationBlurb: formData.get("organizationBlurb") ?? "",
     postedDate: formData.get("postedDate"),
     expiryDate: formData.get("expiryDate"),
-    requirementsText: formData.get("requirementsText") ?? "",
+    requirementsHtml: formData.get("requirementsHtml") ?? "",
+    howToApply: formData.get("howToApplyHtml") ?? "",
     contactEmail: formData.get("contactEmail"),
     contactPhoneDisplay: formData.get("contactPhoneDisplay"),
     contactPhoneTel: formData.get("contactPhoneTel"),
@@ -248,7 +255,8 @@ export async function updateTender(
     return { ok: false, message: logoResult.error };
   }
 
-  const requirements = requirementsFromPlainText(parsed.data.requirementsText);
+  const requirementsHtml = sanitizeTenderHtml(parsed.data.requirementsHtml);
+  const howToApply = sanitizeTenderHtml(parsed.data.howToApply);
   const contact = tenderContactFromForm(parsed.data);
 
   try {
@@ -266,7 +274,9 @@ export async function updateTender(
         organizationLogoUrl: logoResult,
         documents: documents as unknown as Prisma.InputJsonValue,
         detailRows: [] as unknown as Prisma.InputJsonValue,
-        requirements: requirements as unknown as Prisma.InputJsonValue,
+        requirements: [] as unknown as Prisma.InputJsonValue,
+        requirementsHtml,
+        howToApply,
         contact: contact as unknown as Prisma.InputJsonValue,
       },
     });

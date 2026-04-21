@@ -10,21 +10,27 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  /** Full admin plus user management (/admin/users). Multiple users may have this role. */
+  SUPER_ADMIN
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  phone         String?
-  residence     String?
-  gender        String?
-  role          Role      @default(USER)
-  accounts      Account[]
-  sessions      Session[]
+  id              String    @id @default(cuid())
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  passwordHash    String?
+  phone           String?
+  residence       String?
+  gender          String?
+  role            Role      @default(USER)
+  lastLoginAt     DateTime?
+  accounts        Account[]
+  sessions        Session[]
+
+  @@index([lastLoginAt])
+  @@index([role])
 }
 
 /// Short-lived email verification codes for registration (not NextAuth VerificationToken).
@@ -103,7 +109,12 @@ model Tender {
   organizationLogoUrl  String?
   documents            Json     @default("[]")
   detailRows           Json     @default("[]")
+  /** Legacy row-based requirements; prefer `requirementsHtml` for new content. */
   requirements         Json     @default("[]")
+  /** Rich-text scope / eligibility (TipTap HTML). */
+  requirementsHtml     String   @default("") @db.Text
+  /** Application steps (TipTap HTML), shown as "How to apply". */
+  howToApply           String   @default("") @db.Text
   contact              Json     @default("{}")
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
