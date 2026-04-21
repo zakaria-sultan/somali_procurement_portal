@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { EditTenderForm } from "@/components/admin/tender-admin-form";
+import { EditTenderFormLazy } from "@/components/admin/tender-admin-lazy-shell";
 import {
   Card,
   CardContent,
@@ -26,10 +26,10 @@ export default async function AdminEditTenderPage({ params }: Props) {
         <CardDescription>{tender.title}</CardDescription>
       </CardHeader>
       <CardContent>
-        <EditTenderForm
+        <EditTenderFormLazy
           tender={tender}
-          postedAt={row.postedDate}
-          expiresAt={row.expiryDate}
+          postedAtIso={row.postedDate.toISOString()}
+          expiresAtIso={row.expiryDate.toISOString()}
         />
       </CardContent>
     </Card>

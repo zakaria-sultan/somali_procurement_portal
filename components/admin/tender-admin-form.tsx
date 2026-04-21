@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useActionState } from "react";
 
 import {
@@ -9,6 +8,7 @@ import {
   type AdminActionState,
 } from "@/app/actions/admin-mutations";
 import { FormAuthAlert } from "@/components/auth/form-auth-alert";
+import { TenderRichTextEditor } from "@/components/admin/tender-rich-text-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,20 +16,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { legacyRequirementsToHtml } from "@/lib/legacy-requirements-html";
 import type { TenderDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-/** TipTap touches the DOM; must not run during SSR or Vercel returns 500 on tender pages. */
-const TenderRichTextEditor = dynamic(
-  () =>
-    import("@/components/admin/tender-rich-text-editor").then(
-      (m) => m.TenderRichTextEditor
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-[180px] rounded-xl border border-border bg-muted/40 animate-pulse" />
-    ),
-  }
-);
 
 const initial: AdminActionState = { ok: true, message: "" };
 
@@ -61,14 +47,17 @@ export function NewTenderForm() {
 
 export function EditTenderForm({
   tender,
-  postedAt,
-  expiresAt,
+  postedAtIso,
+  expiresAtIso,
 }: {
   tender: TenderDetail;
-  postedAt: Date;
-  expiresAt: Date;
+  /** ISO strings — safe across the RSC → client boundary (avoid Date serialization issues). */
+  postedAtIso: string;
+  expiresAtIso: string;
 }) {
   const [state, action] = useActionState(updateTender, initial);
+  const postedAt = new Date(postedAtIso);
+  const expiresAt = new Date(expiresAtIso);
   return (
     <TenderFields
       action={action}

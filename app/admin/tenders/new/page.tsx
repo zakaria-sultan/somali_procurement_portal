@@ -1,4 +1,4 @@
-import { NewTenderForm } from "@/components/admin/tender-admin-form";
+import { NewTenderFormLazy } from "@/components/admin/tender-admin-lazy-shell";
 import {
   Card,
   CardContent,
@@ -18,7 +18,7 @@ export default function AdminNewTenderPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <NewTenderForm />
+        <NewTenderFormLazy />
       </CardContent>
     </Card>
   );
