@@ -1,25 +1,22 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { auth } from "@/lib/auth";
-
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
+/**
+ * Keep this file tiny — Vercel Hobby limits Edge middleware to 1 MB. Do not
+ * import `auth` / Prisma / full NextAuth config here (that bundle exceeds the limit).
+ * `/admin` is enforced in `app/admin/layout.tsx` via `assertAdmin()`.
+ */
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
   if (pathname !== "/" && pathname.endsWith("/")) {
-    const url = req.nextUrl.clone();
+    const url = request.nextUrl.clone();
     url.pathname = pathname.replace(/\/+$/, "");
     return NextResponse.redirect(url);
   }
 
-  if (pathname.startsWith("/admin")) {
-    const role = req.auth?.user?.role;
-    if (role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-  }
-
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
