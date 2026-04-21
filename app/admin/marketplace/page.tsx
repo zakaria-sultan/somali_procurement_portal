@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { deleteMarketplaceListing } from "@/app/actions/admin-mutations";
+import { deleteMarketplaceListing } from "@/app/actions/admin-deletes";
 import { AdminListFlash } from "@/components/admin/admin-list-flash";
 import { ConfirmDeleteForm } from "@/components/admin/confirm-delete-form";
 import { buttonVariants } from "@/components/ui/button";
