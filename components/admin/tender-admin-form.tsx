@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useActionState } from "react";
 
 import {
@@ -8,7 +9,6 @@ import {
   type AdminActionState,
 } from "@/app/actions/admin-mutations";
 import { FormAuthAlert } from "@/components/auth/form-auth-alert";
-import { TenderRichTextEditor } from "@/components/admin/tender-rich-text-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { legacyRequirementsToHtml } from "@/lib/legacy-requirements-html";
 import type { TenderDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+/** TipTap touches the DOM; must not run during SSR or Vercel returns 500 on tender pages. */
+const TenderRichTextEditor = dynamic(
+  () =>
+    import("@/components/admin/tender-rich-text-editor").then(
+      (m) => m.TenderRichTextEditor
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-[180px] rounded-xl border border-border bg-muted/40 animate-pulse" />
+    ),
+  }
+);
 
 const initial: AdminActionState = { ok: true, message: "" };
 
@@ -246,14 +260,15 @@ function TenderFields({
           Documents
         </h2>
         <p className="mb-4 text-xs text-muted-foreground">
-          Upload <strong>.zip</strong> archives only (one or more files per tender
-          package). Max 40 MB per file. At least one document is required.
+          Upload <strong>PDF</strong>, <strong>Word</strong> (.doc, .docx), or{" "}
+          <strong>ZIP</strong> archives — one or more files per tender. Max 40 MB
+          per file. At least one document is required for new tenders.
         </p>
         <Input
           id="documents"
           name="documents"
           type="file"
-          accept=".zip,application/zip,application/x-zip-compressed"
+          accept=".pdf,.doc,.docx,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,application/x-zip-compressed"
           multiple
           className="rounded-xl"
           required={!tender || (tender.documents?.length ?? 0) === 0}

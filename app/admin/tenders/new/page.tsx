@@ -13,8 +13,8 @@ export default function AdminNewTenderPage() {
       <CardHeader>
         <CardTitle>New tender</CardTitle>
         <CardDescription>
-          Upload PDF or Word attachments, add requirements in one block, and
-          set contact details in the form — no raw JSON.
+          Upload PDF, Word, or ZIP documents; use the rich-text fields for
+          requirements and how to apply; set buyer contact below.
         </CardDescription>
       </CardHeader>
       <CardContent>

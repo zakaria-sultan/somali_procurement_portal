@@ -21,16 +21,19 @@ import type { TenderDocument } from "@/lib/types";
 
 export type AdminActionState = { ok: boolean; message: string };
 
-const ZIP_MIME = new Set([
+const TENDER_DOC_MIME = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/zip",
   "application/x-zip-compressed",
   "application/x-zip",
 ]);
 
 function isAllowedDocFile(file: File): boolean {
-  if (ZIP_MIME.has(file.type)) return true;
+  if (TENDER_DOC_MIME.has(file.type)) return true;
   if (!file.type || file.type === "application/octet-stream") {
-    return /\.zip$/i.test(file.name);
+    return /\.(pdf|doc|docx|zip)$/i.test(file.name);
   }
   return false;
 }
@@ -53,7 +56,7 @@ async function tenderDocumentsFromForm(
     if (!(entry instanceof File) || entry.size === 0) continue;
     if (!isAllowedDocFile(entry)) {
       return {
-        error: `${entry.name}: upload .zip archives only.`,
+        error: `${entry.name}: use PDF, Word (.doc, .docx), or .zip only.`,
       };
     }
     if (entry.size > DOC_MAX_BYTES) {
@@ -74,7 +77,7 @@ async function tenderDocumentsFromForm(
   }
   if (list.length === 0) {
     return {
-      error: "Add at least one tender document (.zip).",
+      error: "Add at least one tender document (PDF, Word, or ZIP).",
     };
   }
   return list;
