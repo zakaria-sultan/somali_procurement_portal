@@ -1,9 +1,13 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
-/** Sanitize admin-authored HTML for tender detail (requirements + how to apply). */
+/**
+ * Sanitize admin-authored HTML for tender detail (requirements + how to apply).
+ * Uses `sanitize-html` (no jsdom) so Vercel SSR/Node never loads `isomorphic-dompurify` / jsdom
+ * (those hit ERR_REQUIRE_ESM with Turbopack).
+ */
 export function sanitizeTenderHtml(html: string): string {
-  return DOMPurify.sanitize(html.trim(), {
-    ALLOWED_TAGS: [
+  return sanitizeHtml(html.trim(), {
+    allowedTags: [
       "p",
       "br",
       "strong",
@@ -22,7 +26,11 @@ export function sanitizeTenderHtml(html: string): string {
       "code",
       "pre",
     ],
-    ALLOWED_ATTR: ["href", "target", "rel"],
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+    allowProtocolRelative: false,
   });
 }
 
