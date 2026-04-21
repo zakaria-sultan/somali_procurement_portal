@@ -1,15 +1,25 @@
-import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+import { auth } from "@/lib/auth";
+
+export default auth((req) => {
+  const { pathname } = req.nextUrl;
+
   if (pathname !== "/" && pathname.endsWith("/")) {
-    const url = request.nextUrl.clone();
+    const url = req.nextUrl.clone();
     url.pathname = pathname.replace(/\/+$/, "");
     return NextResponse.redirect(url);
   }
+
+  if (pathname.startsWith("/admin")) {
+    const role = req.auth?.user?.role;
+    if (role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+  }
+
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [

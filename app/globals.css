@@ -102,7 +102,8 @@
   --secondary: #132f4a;
   --secondary-foreground: #f8fafc;
   --muted: #132f4a;
-  --muted-foreground: #94a3b8;
+  /* Brighter than slate-400 so secondary text stays readable on navy surfaces */
+  --muted-foreground: #b8c9d9;
   --accent: #164e63;
   --accent-foreground: #e0f2fe;
   --destructive: oklch(0.704 0.191 22.216);
@@ -124,7 +125,7 @@
   --sidebar-ring: #38bdf8;
 }
 
-/* Explicit light theme (next-themes may set class="light" on <html>) */
+/* Explicit light theme (theme provider may set class="light" on <html>) */
 .light {
   color-scheme: light;
 }

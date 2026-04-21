@@ -1,11 +1,14 @@
 "use server";
 
-import { mockBlogs, mockMarketplace, mockTenders } from "@/lib/mock-data";
 import {
-  buildBlogDetail,
-  buildMarketplaceDetail,
-  buildTenderDetail,
-} from "@/lib/mock-details";
+  mapBlogDetail,
+  mapBlogList,
+  mapMarketplaceDetail,
+  mapMarketplaceList,
+  mapTenderDetail,
+  mapTenderList,
+} from "@/lib/db-map";
+import prisma from "@/lib/prisma";
 import type {
   BlogDetail,
   BlogPost,
@@ -16,70 +19,88 @@ import type {
   TendersQuery,
 } from "@/lib/types";
 
-function matchesDateWindow(dateLabel: string, window: TendersQuery["dateWindow"]) {
-  if (!window || window === "any") return true;
-  const lower = dateLabel.toLowerCase();
-  if (window === "24h") return lower.includes("today");
-  if (window === "3d") return lower.includes("today") || lower.includes("yesterday");
-  if (window === "7d")
-    return (
-      lower.includes("today") ||
-      lower.includes("yesterday") ||
-      lower.includes("apr 17") ||
-      lower.includes("apr 16")
-    );
-  return true;
+function postedDateFilter(window: TendersQuery["dateWindow"]) {
+  if (!window || window === "any") return {};
+  const now = new Date();
+  const days: Record<string, number> = {
+    "24h": 1,
+    "3d": 3,
+    "7d": 7,
+    "30d": 30,
+  };
+  const n = days[window];
+  if (!n) return {};
+  const since = new Date(now.getTime() - n * 24 * 60 * 60 * 1000);
+  return { postedDate: { gte: since } };
 }
 
 export async function getTenders(query: TendersQuery = {}): Promise<Tender[]> {
-  const q = query.q?.trim().toLowerCase() ?? "";
-  const loc = query.location?.trim().toLowerCase() ?? "";
+  const q = query.q?.trim() ?? "";
+  const loc = query.location?.trim() ?? "";
   const category = query.category?.trim() ?? "";
   const sort = query.sort ?? "newest";
   const dateWindow = query.dateWindow ?? "any";
 
-  let list = [...mockTenders];
+  const where = {
+    AND: [
+      q
+        ? {
+            OR: [
+              { title: { contains: q, mode: "insensitive" as const } },
+              { organization: { contains: q, mode: "insensitive" as const } },
+            ],
+          }
+        : {},
+      loc ? { location: { contains: loc, mode: "insensitive" as const } } : {},
+      category && category !== "All" ? { category } : {},
+      postedDateFilter(dateWindow),
+    ],
+  };
 
-  if (q) {
-    list = list.filter(
-      (t) =>
-        t.title.toLowerCase().includes(q) ||
-        t.organization.toLowerCase().includes(q)
-    );
-  }
-  if (loc) {
-    list = list.filter((t) => t.location.toLowerCase().includes(loc));
-  }
-  if (category && category !== "All") {
-    list = list.filter((t) => t.category === category);
-  }
-  list = list.filter((t) => matchesDateWindow(t.dateLabel, dateWindow));
+  const rows = await prisma.tender.findMany({
+    where,
+    orderBy: { postedDate: sort === "oldest" ? "asc" : "desc" },
+  });
 
-  if (sort === "oldest") {
-    list = [...list].reverse();
-  }
-
-  return list;
+  return rows.map(mapTenderList);
 }
 
 export async function getFeaturedTenders(limit = 4): Promise<Tender[]> {
-  return mockTenders.slice(0, limit);
+  const rows = await prisma.tender.findMany({
+    orderBy: { postedDate: "desc" },
+    take: limit,
+  });
+  return rows.map(mapTenderList);
 }
 
-export async function getMarketplaceHighlights(limit = 3): Promise<MarketplaceItem[]> {
-  return mockMarketplace.slice(0, limit);
+export async function getMarketplaceHighlights(
+  limit = 3
+): Promise<MarketplaceItem[]> {
+  const rows = await prisma.marketplaceListing.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+  return rows.map(mapMarketplaceList);
 }
 
 export async function getMarketplaceItems(): Promise<MarketplaceItem[]> {
-  return mockMarketplace;
+  const rows = await prisma.marketplaceListing.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapMarketplaceList);
 }
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
-  return mockBlogs;
+  const rows = await prisma.blog.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapBlogList);
 }
 
 export async function getTenderDetail(id: string): Promise<TenderDetail | null> {
-  return buildTenderDetail(id);
+  const row = await prisma.tender.findUnique({ where: { id } });
+  if (!row) return null;
+  return mapTenderDetail(row);
 }
 
 export async function getRelatedTenders(
@@ -87,13 +108,33 @@ export async function getRelatedTenders(
   category: string,
   limit = 3
 ): Promise<Tender[]> {
-  const same = mockTenders.filter((t) => t.id !== id && t.category === category);
-  const other = mockTenders.filter((t) => t.id !== id && t.category !== category);
-  return [...same, ...other].slice(0, limit);
+  const rows = await prisma.tender.findMany({
+    where: {
+      id: { not: id },
+      category,
+    },
+    orderBy: { postedDate: "desc" },
+    take: limit,
+  });
+  if (rows.length >= limit) return rows.map(mapTenderList);
+
+  const more = await prisma.tender.findMany({
+    where: {
+      id: { not: id },
+      NOT: { category },
+    },
+    orderBy: { postedDate: "desc" },
+    take: limit - rows.length,
+  });
+  return [...rows, ...more].map(mapTenderList);
 }
 
-export async function getMarketplaceDetail(id: string): Promise<MarketplaceDetail | null> {
-  return buildMarketplaceDetail(id);
+export async function getMarketplaceDetail(
+  id: string
+): Promise<MarketplaceDetail | null> {
+  const row = await prisma.marketplaceListing.findUnique({ where: { id } });
+  if (!row) return null;
+  return mapMarketplaceDetail(row);
 }
 
 export async function getRelatedMarketplace(
@@ -101,17 +142,25 @@ export async function getRelatedMarketplace(
   category: string,
   limit = 3
 ): Promise<MarketplaceItem[]> {
-  const same = mockMarketplace.filter(
-    (m) => m.id !== id && m.category === category
-  );
-  const other = mockMarketplace.filter(
-    (m) => m.id !== id && m.category !== category
-  );
-  return [...same, ...other].slice(0, limit);
+  const rows = await prisma.marketplaceListing.findMany({
+    where: { id: { not: id }, category },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+  if (rows.length >= limit) return rows.map(mapMarketplaceList);
+
+  const more = await prisma.marketplaceListing.findMany({
+    where: { id: { not: id }, NOT: { category } },
+    orderBy: { createdAt: "desc" },
+    take: limit - rows.length,
+  });
+  return [...rows, ...more].map(mapMarketplaceList);
 }
 
 export async function getBlogDetail(id: string): Promise<BlogDetail | null> {
-  return buildBlogDetail(id);
+  const row = await prisma.blog.findUnique({ where: { id } });
+  if (!row) return null;
+  return mapBlogDetail(row);
 }
 
 export async function getRelatedBlogs(
@@ -119,7 +168,17 @@ export async function getRelatedBlogs(
   category: string,
   limit = 3
 ): Promise<BlogPost[]> {
-  const same = mockBlogs.filter((b) => b.id !== id && b.category === category);
-  const other = mockBlogs.filter((b) => b.id !== id && b.category !== category);
-  return [...same, ...other].slice(0, limit);
+  const rows = await prisma.blog.findMany({
+    where: { id: { not: id }, category },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+  if (rows.length >= limit) return rows.map(mapBlogList);
+
+  const more = await prisma.blog.findMany({
+    where: { id: { not: id }, NOT: { category } },
+    orderBy: { createdAt: "desc" },
+    take: limit - rows.length,
+  });
+  return [...rows, ...more].map(mapBlogList);
 }

@@ -13,6 +13,8 @@ export type Tender = {
   category: Exclude<ProcurementCategory, "All">;
   dateLabel: string;
   location: string;
+  /** Organization / buyer logo for listings and detail */
+  organizationLogoUrl?: string | null;
 };
 
 export type TenderRequirementRow = {
@@ -36,13 +38,10 @@ export type PartyContact = {
   whatsappDigits: string;
 };
 
-export type TenderDetailRow = { label: string; value: string };
-
 export type TenderDetail = Tender & {
   description: string;
   organizationBlurb: string;
   expiryLabel: string;
-  detailRows: TenderDetailRow[];
   requirements: TenderRequirementRow[];
   documents: TenderDocument[];
   contact: PartyContact;
@@ -74,6 +73,7 @@ export type BlogPost = {
 
 export type BlogDetail = BlogPost & {
   paragraphs: string[];
+  imageUrl?: string | null;
 };
 
 export type TendersQuery = {

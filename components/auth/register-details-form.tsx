@@ -2,21 +2,24 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 import {
-  completeAccount,
-  type CompleteAccountState,
+  submitRegistrationDetails,
+  type RegistrationDetailsState,
 } from "@/app/actions/auth";
+import { FormAuthAlert } from "@/components/auth/form-auth-alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { Eye, EyeOff } from "lucide-react";
 
-const initial: CompleteAccountState = { ok: false, message: "" };
+const initial: RegistrationDetailsState = { ok: false, message: "" };
 
-export function CompleteAccountForm({ email }: { email: string }) {
-  const [state, formAction, pending] = useActionState(completeAccount, initial);
+export function RegisterDetailsForm({ email }: { email: string }) {
+  const [state, formAction, pending] = useActionState(
+    submitRegistrationDetails,
+    initial
+  );
   const [showPw, setShowPw] = useState(false);
 
   return (
@@ -24,7 +27,7 @@ export function CompleteAccountForm({ email }: { email: string }) {
       <input type="hidden" name="email" value={email} />
 
       <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
+        <Label htmlFor="fullName">Full name</Label>
         <Input
           id="fullName"
           name="fullName"
@@ -86,6 +89,7 @@ export function CompleteAccountForm({ email }: { email: string }) {
                 type="radio"
                 name="gender"
                 value="female"
+                required
                 className="size-4 accent-brand-cyan"
               />
               Female
@@ -118,21 +122,13 @@ export function CompleteAccountForm({ email }: { email: string }) {
       </div>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        By clicking create account, you agree to our{" "}
+        By clicking continue, you agree to our{" "}
         <span className="text-primary">Terms of use</span> and{" "}
         <span className="text-primary">Privacy policy</span>.
       </p>
 
       {state.message ? (
-        <p
-          className={cn(
-            "text-sm",
-            state.ok ? "text-muted-foreground" : "text-destructive"
-          )}
-          role="status"
-        >
-          {state.message}
-        </p>
+        <FormAuthAlert variant="error">{state.message}</FormAuthAlert>
       ) : null}
 
       <Button
@@ -140,13 +136,13 @@ export function CompleteAccountForm({ email }: { email: string }) {
         disabled={pending}
         className="h-11 w-full rounded-full uppercase tracking-wide"
       >
-        {pending ? "Please wait…" : "Create account"}
+        {pending ? "Please wait…" : "Continue — send verification code"}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Have an account?{" "}
-        <Link href="/auth/signin" className="font-medium text-primary hover:underline">
-          Sign in
+        Wrong email?{" "}
+        <Link href="/auth/signup" className="font-medium text-primary hover:underline">
+          Go back
         </Link>
       </p>
     </form>

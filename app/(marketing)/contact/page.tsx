@@ -28,20 +28,20 @@ export default function ContactPage() {
   );
 
   return (
-    <div className="bg-slate-100 dark:bg-slate-950">
+    <div className="bg-muted/50 dark:bg-background">
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-8">
         <div className="max-w-2xl">
           <h1 className="font-heading text-3xl font-bold text-brand-navy dark:text-white">
             Contact us
           </h1>
-          <p className="mt-2 text-sm text-brand-navy/85 dark:text-slate-400">
+          <p className="mt-2 text-sm text-brand-navy/85 dark:text-muted-foreground">
             Partnerships, media, and vendor onboarding — we respond within two
             business days.
           </p>
         </div>
 
         <div className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-start">
-          <Card className="border-0 bg-white shadow-md ring-1 ring-slate-200/80 dark:bg-card dark:ring-white/10">
+          <Card className="border-0 bg-card text-card-foreground shadow-md ring-1 ring-border/60 dark:ring-white/10">
             <CardHeader>
               <CardTitle className="text-lg text-brand-navy dark:text-white">
                 Send a message
@@ -57,7 +57,7 @@ export default function ContactPage() {
           </Card>
 
           <div className="flex flex-col gap-6">
-            <Card className="border-0 bg-white shadow-md ring-1 ring-slate-200/80 dark:bg-card dark:ring-white/10">
+            <Card className="border-0 bg-card text-card-foreground shadow-md ring-1 ring-border/60 dark:ring-white/10">
               <CardHeader>
                 <CardTitle className="text-lg text-brand-navy dark:text-white">
                   Offices
@@ -72,7 +72,7 @@ export default function ContactPage() {
                   <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-cyan/15 text-brand-cyan">
                     <MapPin className="size-4" aria-hidden />
                   </span>
-                  <div className="space-y-2 text-brand-navy/90 dark:text-slate-300">
+                  <div className="space-y-2 text-brand-navy/90 dark:text-muted-foreground">
                     <p className="font-medium text-brand-navy dark:text-white">
                       Mogadishu
                     </p>
@@ -127,8 +127,8 @@ export default function ContactPage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden border-0 bg-white p-0 shadow-md ring-1 ring-slate-200/80 dark:bg-card dark:ring-white/10">
-              <div className="border-b border-slate-100 px-5 py-3 dark:border-white/10">
+            <Card className="overflow-hidden border-0 bg-card p-0 text-card-foreground shadow-md ring-1 ring-border/60 dark:ring-white/10">
+              <div className="border-b border-border px-5 py-3">
                 <p className="text-sm font-medium text-brand-navy dark:text-white">
                   Map — Mogadishu office area
                 </p>

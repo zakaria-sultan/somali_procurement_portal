@@ -13,6 +13,13 @@ export function TenderListCard({
   tender: Tender;
   className?: string;
 }) {
+  const initials = tender.organization
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
+  const logo = tender.organizationLogoUrl;
+
   return (
     <Card
       size="sm"
@@ -22,12 +29,17 @@ export function TenderListCard({
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="mr-4 flex size-14 shrink-0 items-center justify-center self-center rounded-lg bg-muted text-xs font-semibold uppercase text-muted-foreground">
-          {tender.organization
-            .split(/\s+/)
-            .slice(0, 2)
-            .map((w) => w[0])
-            .join("")}
+        <div className="mr-4 flex size-14 shrink-0 items-center justify-center self-center overflow-hidden rounded-lg border border-border/60 bg-muted text-xs font-semibold uppercase text-muted-foreground">
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logo}
+              alt=""
+              className="size-full object-contain p-1"
+            />
+          ) : (
+            initials
+          )}
         </div>
         <div className="min-w-0 flex-1 space-y-3 py-1">
           <div>

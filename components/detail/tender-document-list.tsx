@@ -25,9 +25,9 @@ export function TenderDocumentList({
             <a
               href={doc.href}
               download={download}
-              className="inline-flex items-center gap-2 text-sm font-medium text-brand-cyan underline-offset-4 hover:text-brand-cyan/90 hover:underline"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary underline-offset-4 hover:text-primary/90 hover:underline"
             >
-              <Download className="size-4 shrink-0 text-brand-cyan" aria-hidden />
+              <Download className="size-4 shrink-0 text-primary" aria-hidden />
               {doc.name}
             </a>
           </li>

@@ -4,7 +4,8 @@ import { ArrowRight } from "lucide-react";
 import { HeroSearch } from "@/components/marketing/hero-search";
 import { MarketplaceGridCard } from "@/components/marketing/marketplace-grid-card";
 import { TenderGridCard } from "@/components/marketing/tender-grid-card";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { getFeaturedTenders, getMarketplaceHighlights } from "@/app/actions/data";
 import type { Metadata } from "next";
 
@@ -27,15 +28,22 @@ export default async function HomePage() {
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-heading text-3xl font-bold tracking-tight text-brand-navy dark:text-white sm:text-4xl">
               Procurement notices{" "}
-              <span className="text-brand-cyan">built for Somali</span> buyers &
-              suppliers
+              <span className="text-brand-cyan dark:text-sky-300">built for Somali</span>{" "}
+              buyers & suppliers
             </h1>
-            <p className="mt-3 text-base text-brand-navy/90 dark:text-slate-300 sm:text-lg">
+            <p className="mt-3 text-base text-brand-navy/90 dark:text-muted-foreground sm:text-lg">
               Search{" "}
-              <span className="font-semibold text-brand-cyan">tenders</span>,{" "}
-              <span className="font-semibold text-brand-cyan">RFQs</span>, and
-              prequalifications — plus{" "}
-              <span className="font-semibold text-brand-cyan">marketplace</span>{" "}
+              <span className="font-semibold text-brand-cyan dark:text-sky-300">
+                tenders
+              </span>
+              ,{" "}
+              <span className="font-semibold text-brand-cyan dark:text-sky-300">
+                RFQs
+              </span>
+              , and prequalifications — plus{" "}
+              <span className="font-semibold text-brand-cyan dark:text-sky-300">
+                marketplace
+              </span>{" "}
               highlights from verified sellers.
             </p>
           </div>
@@ -48,22 +56,23 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <h2 className="font-heading text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="font-heading text-2xl font-bold text-brand-navy dark:text-white">
               Featured tenders
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Recent procurement activity from federal, NGO, and private buyers.
             </p>
           </div>
-          <Button
-            nativeButton={false}
-            render={<Link href="/tenders" />}
-            variant="outline"
-            className="rounded-full gap-1.5"
+          <Link
+            href="/tenders"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "inline-flex rounded-full gap-1.5"
+            )}
           >
             View all tenders
             <ArrowRight className="size-4" />
-          </Button>
+          </Link>
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {featured.map((t) => (
@@ -76,22 +85,23 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-              <h2 className="font-heading text-2xl font-bold text-slate-900 dark:text-white">
+              <h2 className="font-heading text-2xl font-bold text-brand-navy dark:text-white">
                 Marketplace highlights
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Equipment, real estate, and services from the SPP marketplace.
               </p>
             </div>
-            <Button
-              nativeButton={false}
-              render={<Link href="/marketplace" />}
-              variant="outline"
-              className="rounded-full gap-1.5"
+            <Link
+              href="/marketplace"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "inline-flex rounded-full gap-1.5"
+              )}
             >
               Explore marketplace
               <ArrowRight className="size-4" />
-            </Button>
+            </Link>
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {marketplace.map((item) => (
@@ -110,13 +120,15 @@ export default async function HomePage() {
             Vendor onboarding and verified listings will connect to your account
             once authentication is enabled.
           </p>
-          <Button
-            nativeButton={false}
-            render={<Link href="/contact" />}
-            className="mt-6 rounded-full bg-brand-cyan text-primary-foreground hover:bg-brand-cyan/90"
+          <Link
+            href="/contact"
+            className={cn(
+              buttonVariants(),
+              "mt-6 inline-flex rounded-full bg-brand-cyan text-white hover:bg-brand-cyan/90"
+            )}
           >
             Contact the team
-          </Button>
+          </Link>
         </div>
       </section>
     </div>

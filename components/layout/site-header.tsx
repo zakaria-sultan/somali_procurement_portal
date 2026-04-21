@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, UserRound } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import { LogOut, Menu, UserRound } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { UserAccountMenu } from "@/components/layout/user-account-menu";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -47,6 +49,8 @@ function NavLink({
 }
 
 export function SiteHeader() {
+  const { data: session } = useSession();
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-card/95 print:hidden backdrop-blur supports-backdrop-filter:bg-card/80">
       <div className="mx-auto flex min-h-[4.25rem] max-w-6xl items-center gap-4 px-4 py-3 md:px-8">
@@ -75,6 +79,33 @@ export function SiteHeader() {
                     {item.label}
                   </Link>
                 ))}
+                {session?.user?.email ? (
+                  <>
+                    <Link
+                      href="/account"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+                    >
+                      <UserRound className="size-4" />
+                      Profile
+                    </Link>
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-destructive hover:bg-destructive/10"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
+                      <LogOut className="size-4" />
+                      Sign out
+                    </button>
+                  </>
+                ) : null}
+                {session?.user?.role === "ADMIN" ? (
+                  <Link
+                    href="/admin"
+                    className="rounded-lg px-3 py-2.5 text-sm font-semibold text-brand-cyan hover:bg-muted"
+                  >
+                    Admin dashboard
+                  </Link>
+                ) : null}
               </div>
             </SheetContent>
           </Sheet>
@@ -91,16 +122,15 @@ export function SiteHeader() {
 
         <div className="ml-4 flex flex-1 items-center justify-end gap-3 sm:ml-6 sm:gap-4">
           <ThemeToggle />
-          <Link
-            href="/auth/signin"
-            className={cn(
-              buttonVariants({ size: "default" }),
-              "rounded-full border border-brand-navy/20 bg-brand-navy px-4 text-white shadow-sm hover:bg-brand-navy/90 hover:text-white"
-            )}
-          >
-            <UserRound className="size-4" />
-            Sign in
-          </Link>
+          {session?.user?.role === "ADMIN" ? (
+            <Link
+              href="/admin"
+              className="hidden text-sm font-semibold text-brand-cyan hover:underline sm:inline"
+            >
+              Admin
+            </Link>
+          ) : null}
+          <UserAccountMenu />
         </div>
       </div>
     </header>

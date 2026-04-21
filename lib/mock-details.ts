@@ -6,17 +6,15 @@ import type {
   PartyContact,
   Tender,
   TenderDetail,
-  TenderDetailRow,
 } from "@/lib/types";
 
-type TenderExtra = Omit<TenderDetail, keyof Tender | "contact">;
+type TenderExtra = Omit<TenderDetail, keyof Tender>;
 
-function buildContact(rows: TenderDetailRow[]): PartyContact {
-  const q = rows.find((r) => r.label === "Questions");
-  const email =
-    q && /\S+@\S+/.test(q.value) ? q.value.trim() : SITE_CONTACT.email;
+function sitePhones(): Pick<
+  PartyContact,
+  "phoneDisplay" | "phoneTel" | "whatsappDigits"
+> {
   return {
-    email,
     phoneDisplay: SITE_CONTACT.phoneDisplay,
     phoneTel: SITE_CONTACT.phoneTel,
     whatsappDigits: SITE_CONTACT.whatsappDigits,
@@ -30,16 +28,10 @@ const tenderExtras: Partial<Record<string, TenderExtra>> = {
     organizationBlurb:
       "The ministry coordinates national health policy, public hospital networks, and emergency medical logistics across Federal Member States.",
     expiryLabel: "May 02, 2026",
-    detailRows: [
-      { label: "RFQ #", value: "FMoH-MOG-2026-014" },
-      { label: "Issuing date", value: "Apr 19, 2026" },
-      { label: "Closing date", value: "May 02, 2026" },
-      { label: "Closing time", value: "15:00 (EAT)" },
-      { label: "Currency of bid", value: "USD" },
-      { label: "Bid validity", value: "90 days" },
-      { label: "Delivery destination", value: "Mogadishu central medical stores" },
-      { label: "Questions", value: "procurement@health.gov.example" },
-    ],
+    contact: {
+      email: "procurement@health.gov.example",
+      ...sitePhones(),
+    },
     requirements: [
       {
         item: "1",
@@ -84,16 +76,10 @@ const tenderExtras: Partial<Record<string, TenderExtra>> = {
     organizationBlurb:
       "DRC is an international NGO delivering humanitarian assistance and durable solutions programming in Somalia with a focus on protection and livelihoods.",
     expiryLabel: "Apr 23, 2026",
-    detailRows: [
-      { label: "RFQ #", value: "DRC-SOM-GAL-2026-883" },
-      { label: "Issuing date", value: "Apr 18, 2026" },
-      { label: "Closing date", value: "Apr 23, 2026" },
-      { label: "Closing time", value: "16:30 (EAT)" },
-      { label: "Currency of bid", value: "USD" },
-      { label: "Bid validity", value: "120 days" },
-      { label: "Delivery destination", value: "Galkacyo district hubs" },
-      { label: "Questions", value: "somalia.procurement@drc.example" },
-    ],
+    contact: {
+      email: "somalia.procurement@drc.example",
+      ...sitePhones(),
+    },
     requirements: [
       {
         item: "1",
@@ -131,17 +117,13 @@ const tenderExtras: Partial<Record<string, TenderExtra>> = {
 
 function defaultTenderExtra(base: Tender): TenderExtra {
   return {
-    description: `${base.organization} is soliciting offers for: ${base.title}. Please review the key data table and downloadable instructions before preparing your submission.`,
+    description: `${base.organization} is soliciting offers for: ${base.title}. Please review the downloadable instructions before preparing your submission.`,
     organizationBlurb: `${base.organization} publishes procurement notices on Somali Procurement Portal to reach qualified local and international vendors.`,
     expiryLabel: "May 15, 2026",
-    detailRows: [
-      { label: "Notice reference", value: base.id.toUpperCase() },
-      { label: "Posted", value: base.dateLabel },
-      { label: "Location", value: base.location },
-      { label: "Category", value: base.category },
-      { label: "Submission channel", value: "Electronic + sealed hard copy" },
-      { label: "Clarification window", value: "5 business days" },
-    ],
+    contact: {
+      email: SITE_CONTACT.email,
+      ...sitePhones(),
+    },
     requirements: [
       {
         item: "1",
@@ -169,8 +151,7 @@ export function buildTenderDetail(id: string): TenderDetail | null {
   const base = mockTenders.find((t) => t.id === id);
   if (!base) return null;
   const extra = tenderExtras[id] ?? defaultTenderExtra(base);
-  const merged = { ...base, ...extra };
-  return { ...merged, contact: buildContact(merged.detailRows) };
+  return { ...base, ...extra };
 }
 
 type MarketplaceExtra = Pick<

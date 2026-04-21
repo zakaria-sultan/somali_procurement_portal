@@ -1,7 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@ecosy/next-themes";
 import { useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       {isDark ? (
         <Sun className="size-4 text-amber-400" />
       ) : (
-        <Moon className="size-4 text-brand-navy" />
+        <Moon className="size-4 text-foreground" />
       )}
     </Button>
   );

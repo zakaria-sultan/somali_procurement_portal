@@ -40,6 +40,7 @@ export default async function TenderDetailPage({ params }: Props) {
     .slice(0, 2)
     .map((w) => w[0])
     .join("");
+  const logoUrl = tender.organizationLogoUrl;
 
   return (
     <div className="bg-background print:bg-white">
@@ -55,8 +56,17 @@ export default async function TenderDetailPage({ params }: Props) {
 
         <header className="border-b border-border pb-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-bold uppercase text-muted-foreground">
-              {initials}
+            <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted text-sm font-bold uppercase text-muted-foreground">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoUrl}
+                  alt=""
+                  className="size-full object-contain p-1"
+                />
+              ) : (
+                initials
+              )}
             </div>
             <div className="min-w-0 flex-1 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
@@ -92,66 +102,41 @@ export default async function TenderDetailPage({ params }: Props) {
               </p>
             </section>
 
-            <section>
-              <h2 className="font-heading text-lg font-semibold text-foreground">
-                Key data
-              </h2>
-              <div className="mt-4 overflow-hidden rounded-xl border border-border">
-                <table className="w-full text-sm">
-                  <tbody className="divide-y divide-border">
-                    {tender.detailRows.map((row) => (
-                      <tr key={row.label} className="bg-card">
-                        <th className="w-2/5 bg-muted/50 px-4 py-3 text-left font-medium text-foreground">
-                          {row.label}
-                        </th>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {/\S+@\S+/.test(row.value) ? (
-                            <a
-                              href={`mailto:${row.value}`}
-                              className="text-primary hover:underline"
-                            >
-                              {row.value}
-                            </a>
-                          ) : (
-                            row.value
-                          )}
-                        </td>
+            {tender.requirements.length > 0 ? (
+              <section>
+                <h2 className="font-heading text-lg font-semibold text-foreground">
+                  Requirements
+                </h2>
+                <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full min-w-[600px] text-sm">
+                    <thead>
+                      <tr className="bg-muted/70 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <th className="px-4 py-3">#</th>
+                        <th className="px-4 py-3">Description</th>
+                        <th className="px-4 py-3">Unit</th>
+                        <th className="px-4 py-3">Qty</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="font-heading text-lg font-semibold text-foreground">
-                Line items
-              </h2>
-              <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-                <table className="w-full min-w-[600px] text-sm">
-                  <thead>
-                    <tr className="bg-muted/70 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      <th className="px-4 py-3">#</th>
-                      <th className="px-4 py-3">Description</th>
-                      <th className="px-4 py-3">Unit</th>
-                      <th className="px-4 py-3">Qty</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-card">
-                    {tender.requirements.map((r) => (
-                      <tr key={r.item}>
-                        <td className="px-4 py-3 font-medium">{r.item}</td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {r.description}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{r.unit}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{r.quantity}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-card">
+                      {tender.requirements.map((r, idx) => (
+                        <tr key={`${r.item}-${idx}`}>
+                          <td className="px-4 py-3 font-medium">{r.item}</td>
+                          <td className="whitespace-pre-wrap px-4 py-3 text-muted-foreground">
+                            {r.description}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {r.unit}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {r.quantity}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ) : null}
 
             <section>
               <h2 className="font-heading text-lg font-semibold text-foreground">

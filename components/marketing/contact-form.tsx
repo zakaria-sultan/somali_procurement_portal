@@ -76,7 +76,9 @@ export function ContactForm() {
       {state.message ? (
         <p
           className={
-            state.ok ? "text-sm text-brand-navy" : "text-sm text-destructive"
+            state.ok
+              ? "text-sm text-foreground"
+              : "text-sm text-destructive"
           }
           role="status"
         >

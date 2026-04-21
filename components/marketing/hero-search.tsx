@@ -15,21 +15,21 @@ const categories: ProcurementCategory[] = [
 ];
 
 const fieldShell =
-  "relative flex min-h-11 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-card px-3 py-2 dark:border-slate-700 dark:bg-slate-900";
+  "relative flex min-h-11 flex-1 items-center gap-2 rounded-xl border border-border bg-background/90 px-3 py-2 dark:bg-muted/35";
 
 const inputClassName =
-  "h-9 border-0 bg-transparent px-0 text-slate-900 shadow-none placeholder:text-slate-500 focus-visible:ring-0 dark:bg-transparent dark:text-slate-100 dark:placeholder:text-slate-400";
+  "h-9 border-0 bg-transparent px-0 text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0";
 
 export function HeroSearch() {
   return (
     <form
       action="/tenders"
       method="get"
-      className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-card p-2 shadow-sm ring-1 ring-foreground/[0.04] dark:border-slate-700 dark:bg-slate-900 sm:p-3"
+      className="mx-auto max-w-4xl rounded-2xl border border-border bg-card p-2 text-card-foreground shadow-sm ring-1 ring-border/50 sm:p-3"
     >
       <div className="flex flex-col gap-2 lg:flex-row lg:items-stretch">
         <label className={cn(fieldShell, "lg:rounded-l-xl lg:rounded-r-none")}>
-          <Search className="size-4 shrink-0 text-brand-cyan" aria-hidden />
+          <Search className="size-4 shrink-0 text-brand-cyan dark:text-sky-300" aria-hidden />
           <Input
             name="q"
             placeholder="Keywords — title, organization, scope…"
@@ -40,10 +40,10 @@ export function HeroSearch() {
         <label
           className={cn(
             fieldShell,
-            "lg:rounded-none lg:border-x lg:border-slate-200 dark:lg:border-slate-700"
+            "lg:rounded-none lg:border-x lg:border-border"
           )}
         >
-          <MapPin className="size-4 shrink-0 text-brand-cyan" aria-hidden />
+          <MapPin className="size-4 shrink-0 text-brand-cyan dark:text-sky-300" aria-hidden />
           <Input
             name="location"
             placeholder="Country, region or city"
@@ -59,13 +59,13 @@ export function HeroSearch() {
             )}
           >
             <Filter
-              className="mr-2 size-4 shrink-0 text-brand-cyan lg:hidden"
+              className="mr-2 size-4 shrink-0 text-brand-cyan dark:text-sky-300 lg:hidden"
               aria-hidden
             />
             <select
               name="category"
               defaultValue="Tenders"
-              className="h-9 w-full min-w-0 cursor-pointer bg-transparent text-sm text-slate-900 outline-none dark:text-slate-100"
+              className="h-9 w-full min-w-0 cursor-pointer bg-transparent text-sm text-foreground outline-none"
               aria-label="Filter type"
             >
               {categories.map((c) => (
@@ -84,7 +84,7 @@ export function HeroSearch() {
             <select
               name="sort"
               defaultValue="newest"
-              className="h-9 w-full min-w-0 cursor-pointer bg-transparent text-sm text-slate-900 outline-none dark:text-slate-100"
+              className="h-9 w-full min-w-0 cursor-pointer bg-transparent text-sm text-foreground outline-none"
               aria-label="Sort"
             >
               <option value="newest">Newest</option>

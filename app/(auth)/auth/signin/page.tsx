@@ -15,7 +15,21 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function SignInPage() {
+type Props = {
+  searchParams: Promise<{
+    registered?: string;
+    callbackUrl?: string;
+  }>;
+};
+
+export default async function SignInPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const justRegistered = sp.registered === "1";
+  const callbackUrl =
+    typeof sp.callbackUrl === "string" && sp.callbackUrl.startsWith("/")
+      ? sp.callbackUrl
+      : "/";
+
   return (
     <Card className="w-full max-w-md shadow-md">
       <CardHeader className="text-center">
@@ -23,10 +37,16 @@ export default function SignInPage() {
         <CardDescription>We&apos;re glad to see you again.</CardDescription>
       </CardHeader>
       <CardContent>
-        <SignInForm />
+        <SignInForm
+          justRegistered={justRegistered}
+          callbackUrl={callbackUrl}
+        />
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New here?{" "}
-          <Link href="/auth/signup" className="font-medium text-primary hover:underline">
+          <Link
+            href="/auth/signup"
+            className="font-medium text-primary hover:underline"
+          >
             Create an account
           </Link>
         </p>

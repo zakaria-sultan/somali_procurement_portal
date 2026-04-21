@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { requestPasswordReset, type AuthFormState } from "@/app/actions/auth";
+import { FormAuthAlert } from "@/components/auth/form-auth-alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,18 +27,17 @@ export function ForgotPasswordForm() {
           type="email"
           required
           autoComplete="email"
-          placeholder="Email"
+          placeholder="you@example.com"
         />
       </div>
       {state.message ? (
-        <p
-          className={
-            state.ok ? "text-sm text-muted-foreground" : "text-sm text-destructive"
-          }
-          role="status"
-        >
-          {state.message}
-        </p>
+        state.ok ? (
+          <FormAuthAlert variant="success" title="Request received">
+            {state.message}
+          </FormAuthAlert>
+        ) : (
+          <FormAuthAlert variant="error">{state.message}</FormAuthAlert>
+        )
       ) : null}
       <Button
         type="submit"
