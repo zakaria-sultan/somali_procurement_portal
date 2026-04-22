@@ -13,28 +13,37 @@ import { Separator } from "@/components/ui/separator";
 
 const initial: AuthFormState = { ok: false, message: "" };
 
-export function SignUpForm() {
+export function SignUpForm({
+  googleAuth = false,
+}: {
+  /** Server-detected: Google OAuth env vars are set. */
+  googleAuth?: boolean;
+}) {
   const [state, formAction, pending] = useActionState(signUpWithEmail, initial);
 
   return (
     <div className="space-y-6">
-      <Button
-        type="button"
-        variant="outline"
-        className="h-11 w-full rounded-full border-foreground/20"
-        onClick={async () => {
-          await signOut({ redirect: false });
-          await signIn("google", { callbackUrl: "/" });
-        }}
-      >
-        Continue with Google
-      </Button>
-      <div className="relative">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-          or
-        </span>
-      </div>
+      {googleAuth ? (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full rounded-full border-foreground/20"
+            onClick={async () => {
+              await signOut({ redirect: false });
+              await signIn("google", { callbackUrl: "/" });
+            }}
+          >
+            Continue with Google
+          </Button>
+          <div className="relative">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+              or
+            </span>
+          </div>
+        </>
+      ) : null}
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Gmail address</Label>

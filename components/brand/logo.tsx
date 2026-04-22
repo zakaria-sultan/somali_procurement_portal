@@ -1,15 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { LOGO_MARK } from "@/components/brand/logo-mark";
 import { cn } from "@/lib/utils";
 
 function Mark({ className }: { className?: string }) {
   return (
     <Image
-      src="/brand/logo-mark.png"
+      src={LOGO_MARK}
       alt=""
-      width={160}
-      height={160}
+      unoptimized
       className={cn("h-10 w-auto shrink-0 object-contain", className)}
       priority
     />
@@ -57,10 +57,9 @@ export function LogoStacked({ className }: { className?: string }) {
       className={cn("flex flex-col items-center gap-3 outline-none", className)}
     >
       <Image
-        src="/brand/logo-mark.png"
+        src={LOGO_MARK}
         alt=""
-        width={192}
-        height={192}
+        unoptimized
         className="size-12 object-contain"
       />
       <span className="text-center text-base font-semibold tracking-tight text-brand-navy dark:text-white">

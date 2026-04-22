@@ -40,6 +40,8 @@ export type PartyContact = {
 
 export type TenderDetail = Tender & {
   description: string;
+  /** Rich-text body (sanitized HTML); empty when only `description` plain is set. */
+  descriptionHtml: string;
   organizationBlurb: string;
   expiryLabel: string;
   requirements: TenderRequirementRow[];
@@ -48,7 +50,8 @@ export type TenderDetail = Tender & {
   /** Application instructions (sanitized HTML). */
   howToApply: string;
   documents: TenderDocument[];
-  contact: PartyContact;
+  /** Null when buyer left all contact fields empty. */
+  contact: PartyContact | null;
 };
 
 export type MarketplaceItem = {

@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 
 import { joinBlogParagraphs } from "../lib/db-map";
@@ -47,11 +48,14 @@ async function main() {
         postedDate: postedDateFromLabel(t.dateLabel),
         expiryDate: expiryFromDetail(d.expiryLabel),
         description: d.description,
+        descriptionHtml: d.descriptionHtml ?? "",
         organizationBlurb: d.organizationBlurb,
         documents: d.documents,
         detailRows: [],
         requirements: d.requirements,
-        contact: d.contact,
+        requirementsHtml: d.requirementsHtml ?? "",
+        howToApply: d.howToApply ?? "",
+        contact: (d.contact ?? {}) as Prisma.InputJsonValue,
         organizationLogoUrl: null,
       },
     });

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { assertAdmin } from "@/app/actions/admin-guard";
+import { LOGO_MARK } from "@/components/brand/logo-mark";
 import { signOutAction } from "@/app/actions/sign-out";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { isUserManager } from "@/lib/roles";
@@ -27,10 +28,9 @@ export default async function AdminLayout({
           >
             <span className="relative flex size-10 shrink-0 items-center justify-center rounded-xl border border-brand-cyan/25 bg-gradient-to-br from-brand-navy/10 to-brand-cyan/15 shadow-sm dark:from-brand-navy/40 dark:to-brand-cyan/20">
               <Image
-                src="/brand/logo-mark.png"
+                src={LOGO_MARK}
                 alt=""
-                width={36}
-                height={36}
+                unoptimized
                 className="size-8 object-contain"
               />
             </span>

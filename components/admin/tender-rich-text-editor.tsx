@@ -1,11 +1,15 @@
 "use client";
 
+import { ListItem } from "@tiptap/extension-list";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Gapcursor } from "@tiptap/extensions";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
   Heading2,
+  IndentDecrease,
+  IndentIncrease,
   Italic,
   List,
   ListOrdered,
@@ -17,14 +21,26 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+/** Lets users step out of a nested list (toward the next top-level number) with Ctrl/Cmd+Enter. */
+const ListItemWithLiftShortcut = ListItem.extend({
+  addKeyboardShortcuts() {
+    return {
+      ...this.parent?.(),
+      "Mod-Enter": () => this.editor.commands.liftListItem("listItem"),
+    };
+  },
+});
+
 function ToolbarButton({
   onClick,
   active,
+  disabled,
   children,
   label,
 }: {
   onClick: () => void;
   active?: boolean;
+  disabled?: boolean;
   children: React.ReactNode;
   label: string;
 }) {
@@ -34,6 +50,7 @@ function ToolbarButton({
       variant={active ? "secondary" : "ghost"}
       size="sm"
       className="h-8 px-2"
+      disabled={disabled}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       aria-label={label}
@@ -68,15 +85,20 @@ export function TenderRichTextEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },
+        listItem: false,
       }),
+      ListItemWithLiftShortcut,
+      Gapcursor,
       Placeholder.configure({ placeholder }),
     ],
     content: defaultHtml || undefined,
     editorProps: {
       attributes: {
         class: cn(
-          "prose prose-sm dark:prose-invert max-w-none px-3 py-2 outline-none",
-          "[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6",
+          "tender-rich-body prose prose-sm dark:prose-invert max-w-none px-3 py-2 outline-none",
+          "[&_ul]:list-disc [&_ul]:pl-6",
+          "[&_ol_ol]:list-[lower-alpha] [&_ol_ol]:pl-6 [&_ol_ol_ol]:list-[lower-roman]",
+          "[&_ul_ul]:list-[circle] [&_ul_ul]:pl-6 [&_ul_ul_ul]:list-[square]",
           "[&_h2]:text-base [&_h2]:font-semibold [&_h3]:text-sm [&_h3]:font-semibold",
           minHeightClassName
         ),
@@ -137,6 +159,20 @@ export function TenderRichTextEditor({
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ListOrdered className="size-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          label="Indent list (nested)"
+          disabled={!editor.can().sinkListItem("listItem")}
+          onClick={() => editor.chain().focus().sinkListItem("listItem").run()}
+        >
+          <IndentIncrease className="size-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          label="Outdent list (Shift+Tab or Ctrl+Enter for next main number)"
+          disabled={!editor.can().liftListItem("listItem")}
+          onClick={() => editor.chain().focus().liftListItem("listItem").run()}
+        >
+          <IndentDecrease className="size-4" />
         </ToolbarButton>
         <ToolbarButton
           label="Undo"

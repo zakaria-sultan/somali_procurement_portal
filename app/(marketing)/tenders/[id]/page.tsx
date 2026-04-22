@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 
 const tenderProseClass =
-  "tender-prose mt-3 text-sm leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_h2]:mt-4 [&_h2]:font-heading [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:mt-3 [&_h3]:font-heading [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_li]:my-0.5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-6";
+  "tender-rich-body tender-prose mt-3 text-sm leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_h2]:mt-4 [&_h2]:font-heading [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:mt-3 [&_h3]:font-heading [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_li]:my-0.5 [&_ol]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol_ol]:my-2 [&_ol_ol]:list-[lower-alpha] [&_ol_ol]:pl-6 [&_ol_ol_ol]:list-[lower-roman] [&_ul_ul]:my-2 [&_ul_ul]:list-[circle] [&_ul_ul]:pl-6 [&_ul_ul_ul]:list-[square] [&_li>ol]:mt-2 [&_li>ul]:mt-2 [&_p]:my-2";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -55,6 +55,8 @@ export default async function TenderDetailPage({ params }: Props) {
     !showRequirementsRich && tender.requirements.length > 0;
   const howToHtmlSafe = sanitizeTenderHtml(tender.howToApply ?? "");
   const showHowTo = tenderHtmlIsMeaningful(tender.howToApply ?? "");
+  const descriptionHtmlSafe = sanitizeTenderHtml(tender.descriptionHtml ?? "");
+  const showDescriptionRich = tenderHtmlIsMeaningful(tender.descriptionHtml ?? "");
 
   return (
     <div className="bg-background print:bg-white">
@@ -111,31 +113,17 @@ export default async function TenderDetailPage({ params }: Props) {
               <h2 className="font-heading text-lg font-semibold text-foreground">
                 Tender description
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {tender.description}
-              </p>
-            </section>
-
-            {showHowTo ? (
-              <section
-                className="rounded-2xl border-2 border-sky-500/25 bg-gradient-to-br from-sky-50/90 to-card p-6 dark:from-brand-navy/40 dark:to-card print:border print:border-border print:bg-card"
-                aria-labelledby="how-to-apply-heading"
-              >
-                <h2
-                  id="how-to-apply-heading"
-                  className="font-heading text-lg font-semibold text-brand-navy dark:text-foreground"
-                >
-                  How to apply
-                </h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Follow these steps to submit a compliant bid or expression of interest.
-                </p>
+              {showDescriptionRich ? (
                 <div
                   className={tenderProseClass}
-                  dangerouslySetInnerHTML={{ __html: howToHtmlSafe }}
+                  dangerouslySetInnerHTML={{ __html: descriptionHtmlSafe }}
                 />
-              </section>
-            ) : null}
+              ) : (
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {tender.description}
+                </p>
+              )}
+            </section>
 
             {showRequirementsRich ? (
               <section>
@@ -185,8 +173,35 @@ export default async function TenderDetailPage({ params }: Props) {
               <h2 className="font-heading text-lg font-semibold text-foreground">
                 Documents
               </h2>
-              <TenderDocumentList documents={tender.documents} />
+              {tender.documents.length > 0 ? (
+                <TenderDocumentList documents={tender.documents} />
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  No documents uploaded for this notice.
+                </p>
+              )}
             </section>
+
+            {showHowTo ? (
+              <section
+                className="rounded-2xl border-2 border-sky-500/25 bg-gradient-to-br from-sky-50/90 to-card p-6 dark:from-brand-navy/40 dark:to-card print:border print:border-border print:bg-card"
+                aria-labelledby="how-to-apply-heading"
+              >
+                <h2
+                  id="how-to-apply-heading"
+                  className="font-heading text-lg font-semibold text-brand-navy dark:text-foreground"
+                >
+                  How to apply
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Follow these steps to submit a compliant bid or expression of interest.
+                </p>
+                <div
+                  className={tenderProseClass}
+                  dangerouslySetInnerHTML={{ __html: howToHtmlSafe }}
+                />
+              </section>
+            ) : null}
           </div>
 
           <aside className="min-w-0 space-y-4 lg:max-w-none">
@@ -195,12 +210,14 @@ export default async function TenderDetailPage({ params }: Props) {
               expiryLabel={tender.expiryLabel}
               location={tender.location}
             />
-            <ContactPartySection
-              role="buyer"
-              listingTitle={tender.title}
-              organization={tender.organization}
-              contact={tender.contact}
-            />
+            {tender.contact ? (
+              <ContactPartySection
+                role="buyer"
+                listingTitle={tender.title}
+                organization={tender.organization}
+                contact={tender.contact}
+              />
+            ) : null}
           </aside>
         </div>
       </article>

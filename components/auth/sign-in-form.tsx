@@ -16,9 +16,12 @@ const initial: AuthFormState = { ok: false, message: "" };
 export function SignInForm({
   justRegistered = false,
   callbackUrl = "/",
+  googleAuth = false,
 }: {
   justRegistered?: boolean;
   callbackUrl?: string;
+  /** Server-detected: Google OAuth env vars are set. */
+  googleAuth?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(signInWithEmail, initial);
   const safeCallback =
@@ -35,22 +38,26 @@ export function SignInForm({
           linked that way.
         </FormAuthAlert>
       ) : null}
-      <Button
-        type="button"
-        variant="outline"
-        className="h-11 w-full rounded-full border-foreground/20"
-        onClick={() => {
-          void signIn("google", { callbackUrl: safeCallback });
-        }}
-      >
-        Continue with Google
-      </Button>
-      <div className="relative">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-          or
-        </span>
-      </div>
+      {googleAuth ? (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full rounded-full border-foreground/20"
+            onClick={() => {
+              void signIn("google", { callbackUrl: safeCallback });
+            }}
+          >
+            Continue with Google
+          </Button>
+          <div className="relative">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+              or
+            </span>
+          </div>
+        </>
+      ) : null}
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="callbackUrl" value={safeCallback} />
         <div className="space-y-2">

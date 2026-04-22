@@ -8,9 +8,13 @@ import type {
   TenderDetail,
 } from "@/lib/types";
 
-type TenderExtra = Omit<TenderDetail, keyof Tender | "requirementsHtml" | "howToApply"> & {
+type TenderExtra = Omit<
+  TenderDetail,
+  keyof Tender | "requirementsHtml" | "howToApply" | "descriptionHtml"
+> & {
   requirementsHtml?: string;
   howToApply?: string;
+  descriptionHtml?: string;
 };
 
 function sitePhones(): Pick<
@@ -149,6 +153,7 @@ function defaultTenderExtra(base: Tender): TenderExtra {
     ],
     requirementsHtml: "",
     howToApply: "",
+    descriptionHtml: "",
   };
 }
 
@@ -159,6 +164,7 @@ export function buildTenderDetail(id: string): TenderDetail | null {
   return {
     ...base,
     ...extra,
+    descriptionHtml: extra.descriptionHtml ?? "",
     requirementsHtml: extra.requirementsHtml ?? "",
     howToApply: extra.howToApply ?? "",
   };

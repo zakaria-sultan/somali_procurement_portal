@@ -1,4 +1,5 @@
 import { SignUpForm } from "@/components/auth/sign-up-form";
+import { isGoogleOAuthConfigured } from "@/lib/google-oauth-env";
 import {
   Card,
   CardContent,
@@ -14,6 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default function SignUpPage() {
+  const googleAuth = isGoogleOAuthConfigured();
+
   return (
     <Card className="w-full max-w-md shadow-md">
       <CardHeader className="text-center">
@@ -23,7 +26,7 @@ export default function SignUpPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <SignUpForm />
+        <SignUpForm googleAuth={googleAuth} />
       </CardContent>
     </Card>
   );

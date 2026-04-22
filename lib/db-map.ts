@@ -12,14 +12,23 @@ import type {
 import { formatExpiryLabel, formatPostedLabel } from "@/lib/format-posted";
 import type { Blog, MarketplaceListing, Tender as PrismaTender } from "@prisma/client";
 
-function asPartyContact(raw: unknown): PartyContact {
+function asPartyContact(raw: unknown): PartyContact | null {
   const o =
     raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const email = String(o.email ?? "").trim();
+  const phoneDisplay = String(o.phoneDisplay ?? "").trim();
+  const phoneTel = String(o.phoneTel ?? "").trim();
+  const whatsappDigits = String(o.whatsappDigits ?? "").replace(/\D/g, "");
+  if (!email && !phoneDisplay && !phoneTel && !whatsappDigits) {
+    return null;
+  }
+  const display = phoneDisplay || phoneTel;
+  const tel = phoneTel || phoneDisplay.replace(/\s/g, "");
   return {
-    email: String(o.email ?? "info@somaliprocurementportal.com"),
-    phoneDisplay: String(o.phoneDisplay ?? "+252 63 000 0000"),
-    phoneTel: String(o.phoneTel ?? "+252630000000"),
-    whatsappDigits: String(o.whatsappDigits ?? "252630000000"),
+    email,
+    phoneDisplay: display,
+    phoneTel: tel,
+    whatsappDigits,
   };
 }
 
@@ -66,6 +75,7 @@ export function mapTenderDetail(row: PrismaTender): TenderDetail {
   return {
     ...base,
     description: row.description,
+    descriptionHtml: row.descriptionHtml ?? "",
     organizationBlurb: row.organizationBlurb,
     expiryLabel: formatExpiryLabel(row.expiryDate),
     requirements: asRequirements(row.requirements),
@@ -91,12 +101,22 @@ export function mapMarketplaceDetail(row: MarketplaceListing): MarketplaceDetail
   const highlights = Array.isArray(row.highlights)
     ? (row.highlights as unknown[]).filter((h): h is string => typeof h === "string")
     : [];
+  const contact = asPartyContact(row.contact);
   return {
     ...base,
     description: row.description,
     seller: row.seller,
     highlights,
-    contact: asPartyContact(row.contact),
+    contact: contact ?? fallbackMarketplaceContact(),
+  };
+}
+
+function fallbackMarketplaceContact(): PartyContact {
+  return {
+    email: "info@somaliprocurementportal.com",
+    phoneDisplay: "+252 63 000 0000",
+    phoneTel: "+252630000000",
+    whatsappDigits: "252630000000",
   };
 }
 

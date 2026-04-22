@@ -1,59 +1,93 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthConfig, customFetch } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
+import { createAuthPrismaAdapter } from "@/lib/auth-prisma-adapter";
 import type { AppRole } from "@/lib/roles";
+import { getGoogleOAuthCredentials } from "@/lib/google-oauth-env";
 import { ensureSuperAdminBootstrapped } from "@/lib/super-admin-bootstrap";
+import { googleOAuthFetch } from "@/lib/google-oauth-fetch";
+import { canonicalizeOAuthEmail } from "@/lib/oauth-email";
 import prisma from "@/lib/prisma";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
-  trustHost: true,
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
-  },
-  providers: [
-    Credentials({
-      id: "credentials",
-      name: "Email and password",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const email = String(credentials?.email ?? "")
-          .trim()
-          .toLowerCase();
-        const password = String(credentials?.password ?? "");
-        if (!email || !password) return null;
-        const user = await prisma.user.findFirst({
-          where: { email: { equals: email, mode: "insensitive" } },
-        });
-        if (!user?.passwordHash) return null;
-        const ok = await bcrypt.compare(password, user.passwordHash);
-        if (!ok) return null;
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
-      },
-    }),
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+const { clientId: googleClientId, clientSecret: googleClientSecret } =
+  getGoogleOAuthCredentials();
+
+const providers: NextAuthConfig["providers"] = [
+  Credentials({
+    id: "credentials",
+    name: "Email and password",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      const email = String(credentials?.email ?? "")
+        .trim()
+        .toLowerCase();
+      const password = String(credentials?.password ?? "");
+      if (!email || !password) return null;
+      const user = await prisma.user.findFirst({
+        where: { email: { equals: email, mode: "insensitive" } },
+      });
+      if (!user?.passwordHash) return null;
+      const ok = await bcrypt.compare(password, user.passwordHash);
+      if (!ok) return null;
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      };
+    },
+  }),
+];
+
+if (googleClientId && googleClientSecret) {
+  providers.push(
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
       allowDangerousEmailAccountLinking: true,
+      // Explicit endpoints avoid OIDC discovery fetches (accounts.google.com
+      // /.well-known/...), which can throw `TypeError: fetch failed` in some
+      // Node/undici or network setups even when the browser can reach Google.
       authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
           prompt: "select_account",
         },
       },
-    }),
-  ],
+      token: "https://oauth2.googleapis.com/token",
+      userinfo: "https://openidconnect.googleapis.com/v1/userinfo",
+      profile(profile) {
+        const email = profile.email
+          ? canonicalizeOAuthEmail(profile.email)
+          : profile.email;
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email,
+          image: profile.picture,
+        };
+      },
+      // Auth.js reads this symbol at runtime; provider typings omit it.
+      ...{ [customFetch]: googleOAuthFetch },
+    } as Parameters<typeof Google>[0])
+  );
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: createAuthPrismaAdapter(prisma),
+  trustHost: true,
+  secret: authSecret,
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
+  },
+  providers,
   events: {
     async signIn({ user }) {
       if (!user?.id) return;

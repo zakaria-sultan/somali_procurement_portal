@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   description:
     "Tenders, marketplace, and procurement news for Somalia and the Horn of Africa.",
   metadataBase: new URL("https://somaliprocurementportal.com"),
+  /** `app/icon.png` is the favicon; reuse for Apple touch (no second app/apple-icon to avoid duplicate metadata). */
+  icons: {
+    apple: [{ url: "/icon.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

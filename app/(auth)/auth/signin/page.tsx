@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { isGoogleOAuthConfigured } from "@/lib/google-oauth-env";
 import {
   Card,
   CardContent,
@@ -29,6 +30,7 @@ export default async function SignInPage({ searchParams }: Props) {
     typeof sp.callbackUrl === "string" && sp.callbackUrl.startsWith("/")
       ? sp.callbackUrl
       : "/";
+  const googleAuth = isGoogleOAuthConfigured();
 
   return (
     <Card className="w-full max-w-md shadow-md">
@@ -40,6 +42,7 @@ export default async function SignInPage({ searchParams }: Props) {
         <SignInForm
           justRegistered={justRegistered}
           callbackUrl={callbackUrl}
+          googleAuth={googleAuth}
         />
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New here?{" "}

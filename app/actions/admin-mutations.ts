@@ -17,7 +17,10 @@ import {
 import { putAdminBlob } from "@/lib/blob-upload";
 import prisma from "@/lib/prisma";
 import { revalidatePublicSite } from "@/lib/revalidate-public-site";
-import { sanitizeTenderHtml } from "@/lib/sanitize-tender-html";
+import {
+  plainTextFromTenderHtml,
+  sanitizeTenderHtml,
+} from "@/lib/sanitize-tender-html";
 import type { TenderDocument } from "@/lib/types";
 
 export type AdminActionState = { ok: boolean; message: string };
@@ -76,11 +79,6 @@ async function tenderDocumentsFromForm(
       };
     }
   }
-  if (list.length === 0) {
-    return {
-      error: "Add at least one tender document (PDF, Word, or ZIP).",
-    };
-  }
   return list;
 }
 
@@ -129,7 +127,7 @@ export async function createTender(
     organization: formData.get("organization"),
     category: formData.get("category"),
     location: formData.get("location"),
-    description: formData.get("description"),
+    descriptionHtml: formData.get("descriptionHtml") ?? "",
     organizationBlurb: formData.get("organizationBlurb") ?? "",
     postedDate: formData.get("postedDate"),
     expiryDate: formData.get("expiryDate"),
@@ -158,6 +156,15 @@ export async function createTender(
     return { ok: false, message: logoResult.error };
   }
 
+  const descriptionHtml = sanitizeTenderHtml(parsed.data.descriptionHtml);
+  const description = plainTextFromTenderHtml(descriptionHtml);
+  if (description.length < 10) {
+    return {
+      ok: false,
+      message: "Description must contain at least 10 characters of text.",
+    };
+  }
+
   const requirementsHtml = sanitizeTenderHtml(parsed.data.requirementsHtml);
   const howToApply = sanitizeTenderHtml(parsed.data.howToApply);
   const contact = tenderContactFromForm(parsed.data);
@@ -171,7 +178,8 @@ export async function createTender(
         location: parsed.data.location,
         postedDate: parsed.data.postedDate,
         expiryDate: parsed.data.expiryDate,
-        description: parsed.data.description,
+        description,
+        descriptionHtml,
         organizationBlurb: parsed.data.organizationBlurb ?? "",
         organizationLogoUrl: logoResult,
         documents: documents as unknown as Prisma.InputJsonValue,
@@ -216,7 +224,7 @@ export async function updateTender(
     organization: formData.get("organization"),
     category: formData.get("category"),
     location: formData.get("location"),
-    description: formData.get("description"),
+    descriptionHtml: formData.get("descriptionHtml") ?? "",
     organizationBlurb: formData.get("organizationBlurb") ?? "",
     postedDate: formData.get("postedDate"),
     expiryDate: formData.get("expiryDate"),
@@ -251,6 +259,15 @@ export async function updateTender(
     return { ok: false, message: logoResult.error };
   }
 
+  const descriptionHtml = sanitizeTenderHtml(parsed.data.descriptionHtml);
+  const description = plainTextFromTenderHtml(descriptionHtml);
+  if (description.length < 10) {
+    return {
+      ok: false,
+      message: "Description must contain at least 10 characters of text.",
+    };
+  }
+
   const requirementsHtml = sanitizeTenderHtml(parsed.data.requirementsHtml);
   const howToApply = sanitizeTenderHtml(parsed.data.howToApply);
   const contact = tenderContactFromForm(parsed.data);
@@ -265,7 +282,8 @@ export async function updateTender(
         location: parsed.data.location,
         postedDate: parsed.data.postedDate,
         expiryDate: parsed.data.expiryDate,
-        description: parsed.data.description,
+        description,
+        descriptionHtml,
         organizationBlurb: parsed.data.organizationBlurb ?? "",
         organizationLogoUrl: logoResult,
         documents: documents as unknown as Prisma.InputJsonValue,

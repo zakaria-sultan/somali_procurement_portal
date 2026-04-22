@@ -3,8 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  /** Pooled URL (e.g. Neon `*-pooler.*`) — fine for the running app. */
+  url       = env("DATABASE_URL")
+  /** Direct / non-pooler URL — required for `migrate deploy` (advisory locks). From Neon: same branch, “direct” connection. */
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 enum Role {
@@ -104,6 +107,8 @@ model Tender {
   postedDate           DateTime
   expiryDate           DateTime
   description          String   @db.Text
+  /** Rich-text tender overview (TipTap HTML); `description` holds plain text for search/snippets. */
+  descriptionHtml      String   @default("") @db.Text
   organizationBlurb    String   @default("") @db.Text
   /** Optional logo (Blob URL or /api/blob/...) shown on listings and detail. */
   organizationLogoUrl  String?

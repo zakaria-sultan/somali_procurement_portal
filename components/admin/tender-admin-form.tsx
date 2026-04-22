@@ -13,7 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { legacyRequirementsToHtml } from "@/lib/legacy-requirements-html";
+import {
+  legacyRequirementsToHtml,
+  tenderPlainDescriptionToHtml,
+} from "@/lib/legacy-requirements-html";
 import type { TenderDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -27,11 +30,11 @@ const CATEGORIES = [
   "Auction",
 ] as const;
 
-const DEFAULT_CONTACT = {
-  email: "info@somaliprocurementportal.com",
-  phoneDisplay: "+252 63 000 0000",
-  phoneTel: "+252630000000",
-  whatsappDigits: "252630000000",
+const EMPTY_CONTACT = {
+  email: "",
+  phoneDisplay: "",
+  phoneTel: "",
+  whatsappDigits: "",
 };
 
 function toDatetimeLocal(d: Date) {
@@ -87,7 +90,12 @@ function TenderFields({
   const defaultExpiry =
     expiresAt ?? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-  const c = tender?.contact ?? DEFAULT_CONTACT;
+  const c = tender?.contact ?? EMPTY_CONTACT;
+  const descriptionDefaultHtml = tender
+    ? tender.descriptionHtml?.trim()
+      ? tender.descriptionHtml
+      : tenderPlainDescriptionToHtml(tender.description)
+    : "";
   const requirementsDefaultHtml = tender
     ? tender.requirementsHtml?.trim() ||
       (tender.requirements.length > 0
@@ -187,13 +195,20 @@ function TenderFields({
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              required
-              className="min-h-[120px] rounded-xl"
-              defaultValue={tender?.description}
+            <Label htmlFor="description-editor">Description</Label>
+            <p className="text-xs text-muted-foreground">
+              Same toolbar as Requirements — bullets, numbers, nested lists. After
+              sub-bullets, press <strong>Decrease indent</strong>,{" "}
+              <strong>Shift+Tab</strong>, or <strong>Ctrl+Enter</strong> /{" "}
+              <strong>Cmd+Enter</strong> to move back to the main numbered level so
+              the next item continues as 2, 3, …
+            </p>
+            <TenderRichTextEditor
+              key={`${editorKey}-description`}
+              name="descriptionHtml"
+              defaultHtml={descriptionDefaultHtml}
+              placeholder="Background, scope of work, eligibility…"
+              minHeightClassName="min-h-[160px]"
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
@@ -249,9 +264,8 @@ function TenderFields({
           Documents
         </h2>
         <p className="mb-4 text-xs text-muted-foreground">
-          Upload <strong>PDF</strong>, <strong>Word</strong> (.doc, .docx), or{" "}
-          <strong>ZIP</strong> archives — one or more files per tender. Max 40 MB
-          per file. At least one document is required for new tenders.
+          Optional. Upload <strong>PDF</strong>, <strong>Word</strong> (.doc, .docx),
+          or <strong>ZIP</strong> archives. Max 40 MB per file.
         </p>
         <Input
           id="documents"
@@ -260,7 +274,6 @@ function TenderFields({
           accept=".pdf,.doc,.docx,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,application/x-zip-compressed"
           multiple
           className="rounded-xl"
-          required={!tender || (tender.documents?.length ?? 0) === 0}
         />
         {tender && tender.documents.length > 0 ? (
           <ul className="mt-4 space-y-2 rounded-xl border border-border bg-muted/20 p-3 text-sm">
@@ -290,8 +303,11 @@ function TenderFields({
           Requirements
         </h2>
         <p className="mb-4 text-xs text-muted-foreground">
-          Use the toolbar for bold, headings, bullets, and numbered lists. This
-          replaces the old table view on the public tender page.
+          Use the toolbar for bold, headings, bullets, and numbered lists. On a
+          list line, use Increase indent / Decrease indent (or Tab / Shift+Tab,
+          or Ctrl+Enter / Cmd+Enter to outdent one level) for sub-bullets and
+          nested numbering (e.g. 1 → a → b, then outdent so the next line is 2).
+          This replaces the old table view on the public tender page.
         </p>
         <TenderRichTextEditor
           key={`${editorKey}-requirements`}
@@ -320,9 +336,13 @@ function TenderFields({
       </div>
 
       <div className="rounded-2xl border border-border/80 bg-card/50 p-5 shadow-sm">
-        <h2 className="mb-4 font-heading text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-1 font-heading text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Contact (buyer)
         </h2>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Optional. Leave all fields empty to hide the contact card on the public
+          tender page.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="contactEmail">Email</Label>
@@ -330,7 +350,6 @@ function TenderFields({
               id="contactEmail"
               name="contactEmail"
               type="email"
-              required
               defaultValue={c.email}
               className="rounded-xl"
             />
@@ -340,7 +359,6 @@ function TenderFields({
             <Input
               id="contactPhoneDisplay"
               name="contactPhoneDisplay"
-              required
               defaultValue={c.phoneDisplay}
               className="rounded-xl"
             />
@@ -350,7 +368,6 @@ function TenderFields({
             <Input
               id="contactPhoneTel"
               name="contactPhoneTel"
-              required
               defaultValue={c.phoneTel}
               className="rounded-xl"
             />
@@ -360,7 +377,6 @@ function TenderFields({
             <Input
               id="contactWhatsappDigits"
               name="contactWhatsappDigits"
-              required
               defaultValue={c.whatsappDigits}
               className="rounded-xl"
             />

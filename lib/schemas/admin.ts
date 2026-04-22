@@ -32,35 +32,68 @@ const docItem = z.object({
   downloadAs: z.string().max(500).optional(),
 });
 
+function roughPlainFromHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 /** Admin tender form — flat fields, no JSON textareas. */
-export const tenderFormSchema = z.object({
-  title: z.string().trim().min(3).max(500),
-  organization: z.string().trim().min(2).max(200),
-  category: tenderCategorySchema,
-  location: z.string().trim().min(2).max(200),
-  description: z.string().trim().min(10).max(50_000),
-  organizationBlurb: z.string().trim().max(10_000).optional().default(""),
-  postedDate: z.coerce.date(),
-  expiryDate: z.coerce.date(),
-  requirementsHtml: z.string().max(300_000).optional().default(""),
-  howToApply: z.string().max(100_000).optional().default(""),
-  contactEmail: z.string().trim().email().max(200),
-  contactPhoneDisplay: z.string().trim().min(3).max(80),
-  contactPhoneTel: z.string().trim().min(3).max(40),
-  contactWhatsappDigits: z.string().trim().min(5).max(20),
-});
+export const tenderFormSchema = z
+  .object({
+    title: z.string().trim().min(3).max(500),
+    organization: z.string().trim().min(2).max(200),
+    category: tenderCategorySchema,
+    location: z.string().trim().min(2).max(200),
+    descriptionHtml: z.string().max(300_000).optional().default(""),
+    organizationBlurb: z.string().trim().max(10_000).optional().default(""),
+    postedDate: z.coerce.date(),
+    expiryDate: z.coerce.date(),
+    requirementsHtml: z.string().max(300_000).optional().default(""),
+    howToApply: z.string().max(100_000).optional().default(""),
+    contactEmail: z.string().trim().max(200).optional().default(""),
+    contactPhoneDisplay: z.string().trim().max(80).optional().default(""),
+    contactPhoneTel: z.string().trim().max(40).optional().default(""),
+    contactWhatsappDigits: z.string().trim().max(20).optional().default(""),
+  })
+  .superRefine((data, ctx) => {
+    const plain = roughPlainFromHtml(data.descriptionHtml);
+    if (plain.length < 10) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Description must contain at least 10 characters of text.",
+        path: ["descriptionHtml"],
+      });
+    }
+    const e = data.contactEmail.trim();
+    if (e && !z.string().email().safeParse(e).success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid buyer email or leave contact fields empty.",
+        path: ["contactEmail"],
+      });
+    }
+  });
 
 export type TenderFormInput = z.infer<typeof tenderFormSchema>;
 
+/** JSON for Prisma `contact`; `{}` when buyer left contact blank. */
 export function tenderContactFromForm(
   data: TenderFormInput
-): z.infer<typeof contactShape> {
-  return contactShape.parse({
-    email: data.contactEmail,
-    phoneDisplay: data.contactPhoneDisplay,
-    phoneTel: data.contactPhoneTel,
-    whatsappDigits: data.contactWhatsappDigits,
-  });
+): Record<string, string> {
+  const email = data.contactEmail.trim();
+  const phoneDisplay = data.contactPhoneDisplay.trim();
+  const phoneTel = data.contactPhoneTel.trim();
+  const whatsappDigits = data.contactWhatsappDigits.replace(/\D/g, "").trim();
+  if (!email && !phoneDisplay && !phoneTel && !whatsappDigits) {
+    return {};
+  }
+  const display = phoneDisplay || phoneTel;
+  const tel = phoneTel || phoneDisplay.replace(/\s/g, "");
+  return {
+    email,
+    phoneDisplay: display,
+    phoneTel: tel,
+    whatsappDigits,
+  };
 }
 
 /** One block of text → single requirement row for storage / display. */

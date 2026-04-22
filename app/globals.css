@@ -142,6 +142,43 @@
   }
 }
 
+/**
+ * TipTap often outputs several sibling <ol> blocks; browsers restart each at 1.
+ * One shared counter for direct-child <ol> lists fixes "1. … 1. …" on the public page
+ * and in the admin editor preview.
+ */
+@layer components {
+  .tender-rich-body {
+    counter-reset: tender-ol-top;
+  }
+
+  .tender-rich-body > ol {
+    list-style: none;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0;
+  }
+
+  .tender-rich-body > ol > li {
+    position: relative;
+    counter-increment: tender-ol-top;
+    margin-top: 0.125rem;
+    margin-bottom: 0.125rem;
+    padding-left: 1.75rem;
+  }
+
+  .tender-rich-body > ol > li::marker {
+    content: "";
+  }
+
+  .tender-rich-body > ol > li::before {
+    position: absolute;
+    left: 0;
+    content: counter(tender-ol-top) ". ";
+    font-weight: inherit;
+  }
+}
+
 @media print {
   @page {
     margin: 14mm;
