@@ -177,6 +177,53 @@
     content: counter(tender-ol-top) ". ";
     font-weight: inherit;
   }
+
+  .tender-rich-body table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
+
+  /* prose / prose-invert often zero out table borders — keep the grid obvious */
+  .tender-rich-body th,
+  .tender-rich-body td {
+    border: 1px solid var(--border) !important;
+    border-style: solid !important;
+    border-width: 1px !important;
+    padding: 0.4rem 0.6rem;
+    vertical-align: top;
+    min-width: 2.75rem;
+    min-height: 2.5rem;
+  }
+
+  .tender-rich-body th {
+    background: var(--muted) !important;
+    font-weight: 600;
+  }
+
+  .tender-rich-body td {
+    background: var(--card);
+  }
+
+  .tender-rich-body .tableWrapper {
+    margin: 0.75rem 0;
+    max-width: 100%;
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    outline: 1px solid var(--border);
+    outline-offset: 0;
+  }
+
+  .tender-rich-body .tableWrapper table {
+    margin-top: 0;
+    margin-bottom: 0;
+    border: none;
+    outline: none;
+  }
 }
 
 @media print {

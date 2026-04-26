@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 
 import {
   createTender,
@@ -85,10 +85,30 @@ function TenderFields({
   postedAt?: Date;
   expiresAt?: Date;
 }) {
-  const now = new Date();
-  const defaultPosted = postedAt ?? now;
-  const defaultExpiry =
-    expiresAt ?? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const newTenderDatetimeDefaultsRef = useRef<{
+    posted: string;
+    expiry: string;
+  } | null>(null);
+
+  function getNewTenderDatetimeDefaults() {
+    if (!newTenderDatetimeDefaultsRef.current) {
+      const start = new Date();
+      newTenderDatetimeDefaultsRef.current = {
+        posted: toDatetimeLocal(start),
+        expiry: toDatetimeLocal(
+          new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000)
+        ),
+      };
+    }
+    return newTenderDatetimeDefaultsRef.current;
+  }
+
+  const postedDatetimeDefault = tender
+    ? toDatetimeLocal(postedAt!)
+    : getNewTenderDatetimeDefaults().posted;
+  const expiryDatetimeDefault = tender
+    ? toDatetimeLocal(expiresAt!)
+    : getNewTenderDatetimeDefaults().expiry;
 
   const c = tender?.contact ?? EMPTY_CONTACT;
   const descriptionDefaultHtml = tender
@@ -179,7 +199,7 @@ function TenderFields({
               name="postedDate"
               type="datetime-local"
               required
-              defaultValue={toDatetimeLocal(defaultPosted)}
+              defaultValue={postedDatetimeDefault}
               className="rounded-xl"
             />
           </div>
@@ -190,7 +210,7 @@ function TenderFields({
               name="expiryDate"
               type="datetime-local"
               required
-              defaultValue={toDatetimeLocal(defaultExpiry)}
+              defaultValue={expiryDatetimeDefault}
               className="rounded-xl"
             />
           </div>
@@ -209,6 +229,7 @@ function TenderFields({
               defaultHtml={descriptionDefaultHtml}
               placeholder="Background, scope of work, eligibility…"
               minHeightClassName="min-h-[160px]"
+              enableTables
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
